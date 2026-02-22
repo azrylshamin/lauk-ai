@@ -13,3 +13,11 @@ ai-service/models/
 
 # Ultralytics / YOLO
 runs/
+ai-service/yolov8n.pt
+# Node
+node_modules/
+
+# Environment files
+.env
+.env.local
+.env.production
