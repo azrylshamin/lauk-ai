@@ -1,264 +1,190 @@
-import { useState } from "react";
-import "./App.css";
+import { useState, useMemo } from "react";
+import { predictImage, assignMenuItem, saveBill } from "./services/api";
+import Header from "./components/Header/Header";
+import ImageUpload from "./components/ImageUpload/ImageUpload";
+import Receipt from "./components/Receipt/Receipt";
+import AddItemSheet from "./components/AddItemSheet/AddItemSheet";
+import SuccessToast from "./components/SuccessToast/SuccessToast";
 
-const API_URL = "http://localhost:3000";
-
-function App() {
+export default function App() {
   const [image, setImage] = useState(null);
   const [preview, setPreview] = useState(null);
-  const [results, setResults] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [assigningClass, setAssigningClass] = useState(null);
-  const [assignForm, setAssignForm] = useState({ name: "", price: "" });
 
+  const [editableItems, setEditableItems] = useState(null);
+  const [confirmed, setConfirmed] = useState(false);
+  const [confirming, setConfirming] = useState(false);
+
+  const [showAddSheet, setShowAddSheet] = useState(false);
+  const [assigningClass, setAssigningClass] = useState(null);
+
+  // ── Derived ────────────────────────────────────────────────
+  const total = useMemo(() => {
+    if (!editableItems) return 0;
+    return editableItems.reduce(
+      (sum, item) => (item.known && item.price != null ? sum + item.price * item.quantity : sum),
+      0
+    );
+  }, [editableItems]);
+
+  const itemCount = useMemo(() => {
+    if (!editableItems) return 0;
+    return editableItems.reduce((sum, item) => sum + item.quantity, 0);
+  }, [editableItems]);
+
+  const hasUnknown = editableItems?.some((item) => !item.known);
+
+  // ── Handlers ───────────────────────────────────────────────
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
       setImage(file);
       setPreview(URL.createObjectURL(file));
-      setResults(null);
+      setEditableItems(null);
       setError(null);
+      setConfirmed(false);
     }
   };
 
-  const detectFood = async () => {
+  const handleDetect = async () => {
     if (!image) return;
-
     setLoading(true);
     setError(null);
-    setResults(null);
+    setEditableItems(null);
+    setConfirmed(false);
 
     try {
-      const formData = new FormData();
-      formData.append("file", image);
-
-      const res = await fetch(`${API_URL}/api/predict`, {
-        method: "POST",
-        body: formData,
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        setError(data.detail || data.error || "Unknown error");
-        return;
-      }
-
-      setResults(data);
+      const data = await predictImage(image);
+      const items = data.items.map((item, i) => ({
+        ...item,
+        id: `det-${Date.now()}-${i}`,
+        quantity: 1,
+      }));
+      setEditableItems(items);
     } catch (err) {
-      setError(`Connection failed: ${err.message}`);
+      setError(err.message);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleAssign = async (yoloClass) => {
-    const { name, price } = assignForm;
-    if (!name.trim() || !price) return;
+  const updateQuantity = (id, delta) => {
+    setEditableItems((prev) =>
+      prev.map((item) =>
+        item.id === id ? { ...item, quantity: Math.max(1, item.quantity + delta) } : item
+      )
+    );
+  };
 
+  const removeItem = (id) => {
+    setEditableItems((prev) => prev.filter((item) => item.id !== id));
+  };
+
+  const handleAssignSave = async (yoloClass, name, price) => {
     try {
-      const res = await fetch(`${API_URL}/api/menu-items`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          yolo_class: yoloClass,
-          name: name.trim(),
-          price: parseFloat(price),
-        }),
-      });
-
-      if (!res.ok) {
-        const data = await res.json();
-        setError(data.error || "Failed to assign item");
-        return;
-      }
-
-      // Re-scan after assigning
+      const created = await assignMenuItem(yoloClass, name, price);
+      setEditableItems((prev) =>
+        prev.map((item) =>
+          item.yolo_class === yoloClass
+            ? { ...item, name: created.name, price: parseFloat(created.price), known: true, menu_item_id: created.id }
+            : item
+        )
+      );
       setAssigningClass(null);
-      setAssignForm({ name: "", price: "" });
-      detectFood();
     } catch (err) {
-      setError(`Assign failed: ${err.message}`);
+      setError(err.message);
     }
   };
 
-  const checkHealth = async () => {
+  const handleAddMenuItem = (menuItem) => {
+    setEditableItems((prev) => {
+      const existing = prev.find((item) => item.known && item.yolo_class === menuItem.yolo_class);
+      if (existing) {
+        return prev.map((item) =>
+          item.id === existing.id ? { ...item, quantity: item.quantity + 1 } : item
+        );
+      }
+      return [
+        ...prev,
+        {
+          id: `add-${Date.now()}-${menuItem.id}`,
+          name: menuItem.name,
+          yolo_class: menuItem.yolo_class,
+          price: parseFloat(menuItem.price),
+          confidence: null,
+          known: true,
+          quantity: 1,
+          menu_item_id: menuItem.id,
+        },
+      ];
+    });
+    setShowAddSheet(false);
+  };
+
+  const handleConfirm = async () => {
+    if (!editableItems || editableItems.length === 0) return;
+    setConfirming(true);
+    setError(null);
+
     try {
-      const res = await fetch(`${API_URL}/api/health`);
-      const data = await res.json();
-      alert(JSON.stringify(data, null, 2));
+      await saveBill(editableItems, total);
+      setConfirmed(true);
+      setTimeout(() => {
+        setEditableItems(null);
+        setConfirmed(false);
+        setImage(null);
+        setPreview(null);
+      }, 2500);
     } catch (err) {
-      alert(`Cannot reach backend: ${err.message}`);
+      setError(err.message);
+    } finally {
+      setConfirming(false);
     }
   };
 
-  const hasUnknown = results?.items?.some((item) => !item.known);
-
+  // ── Render ─────────────────────────────────────────────────
   return (
     <div className="app">
-      <header className="header">
-        <h1>LaukAI</h1>
-        <p className="subtitle">Food Detection &amp; Pricing</p>
-        <button className="health-btn" onClick={checkHealth}>
-          Check Health
-        </button>
-      </header>
+      <Header />
 
-      <main className="main">
-        {/* Upload area */}
-        <div className="upload-section">
-          <label className="upload-box" htmlFor="file-input">
-            {preview ? (
-              <img src={preview} alt="Preview" className="preview-img" />
-            ) : (
-              <div className="upload-placeholder">
-                <span className="upload-icon">📷</span>
-                <p>Click to select an image</p>
-              </div>
-            )}
-            <input
-              id="file-input"
-              type="file"
-              accept="image/*"
-              onChange={handleFileChange}
-              hidden
-            />
-          </label>
+      <main>
+        <ImageUpload
+          preview={preview}
+          onFileChange={handleFileChange}
+          onDetect={handleDetect}
+          loading={loading}
+          disabled={!image}
+        />
 
-          <button
-            className="detect-btn"
-            onClick={detectFood}
-            disabled={!image || loading}
-          >
-            {loading ? "Detecting..." : "Detect Food"}
-          </button>
-        </div>
-
-        {/* Error */}
         {error && <div className="error-box">{error}</div>}
+        {confirmed && <SuccessToast />}
 
-        {/* Results — Itemised Receipt */}
-        {results && (
-          <div className="receipt">
-            <div className="receipt-header">
-              <h2>Order Summary</h2>
-              <span className="item-count">{results.count} items</span>
-            </div>
-
-            {results.count === 0 ? (
-              <p className="no-results">
-                No food items detected. Try another image.
-              </p>
-            ) : (
-              <>
-                <div className="receipt-items">
-                  {results.items.map((item, i) => (
-                    <div
-                      key={i}
-                      className={`receipt-row ${!item.known ? "unknown" : ""}`}
-                    >
-                      <div className="receipt-row-left">
-                        <span className="item-name">
-                          {item.name}
-                          {!item.known && (
-                            <span className="unknown-badge">?</span>
-                          )}
-                        </span>
-                        <span className="item-class">{item.yolo_class}</span>
-                      </div>
-                      <div className="receipt-row-right">
-                        <span className="item-confidence">
-                          {(item.confidence * 100).toFixed(0)}%
-                        </span>
-                        {item.known ? (
-                          <span className="item-price">
-                            RM {item.price.toFixed(2)}
-                          </span>
-                        ) : (
-                          <button
-                            className="assign-btn"
-                            onClick={() => {
-                              setAssigningClass(item.yolo_class);
-                              setAssignForm({ name: "", price: "" });
-                            }}
-                          >
-                            Assign
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Assign form for unknown items */}
-                {assigningClass && (
-                  <div className="assign-form">
-                    <p className="assign-title">
-                      Assign "<strong>{assigningClass}</strong>" to a menu item
-                    </p>
-                    <div className="assign-fields">
-                      <input
-                        type="text"
-                        placeholder="Item name (e.g. Ayam)"
-                        value={assignForm.name}
-                        onChange={(e) =>
-                          setAssignForm({ ...assignForm, name: e.target.value })
-                        }
-                      />
-                      <input
-                        type="number"
-                        step="0.10"
-                        min="0"
-                        placeholder="Price (RM)"
-                        value={assignForm.price}
-                        onChange={(e) =>
-                          setAssignForm({
-                            ...assignForm,
-                            price: e.target.value,
-                          })
-                        }
-                      />
-                    </div>
-                    <div className="assign-actions">
-                      <button
-                        className="assign-save"
-                        onClick={() => handleAssign(assigningClass)}
-                        disabled={!assignForm.name.trim() || !assignForm.price}
-                      >
-                        Save
-                      </button>
-                      <button
-                        className="assign-cancel"
-                        onClick={() => setAssigningClass(null)}
-                      >
-                        Cancel
-                      </button>
-                    </div>
-                  </div>
-                )}
-
-                {/* Total */}
-                <div className="receipt-total">
-                  <span className="total-label">Total</span>
-                  <span className="total-price">
-                    RM {results.total.toFixed(2)}
-                  </span>
-                </div>
-
-                {hasUnknown && (
-                  <p className="unknown-hint">
-                    Items marked with <span className="unknown-badge inline">?</span>{" "}
-                    are not in the menu. Click "Assign" to add them.
-                  </p>
-                )}
-              </>
-            )}
-          </div>
+        {editableItems && !confirmed && (
+          <Receipt
+            items={editableItems}
+            itemCount={itemCount}
+            total={total}
+            hasUnknown={hasUnknown}
+            confirming={confirming}
+            assigningClass={assigningClass}
+            onUpdateQty={updateQuantity}
+            onRemove={removeItem}
+            onStartAssign={setAssigningClass}
+            onAssignSave={handleAssignSave}
+            onAssignCancel={() => setAssigningClass(null)}
+            onAddItem={() => setShowAddSheet(true)}
+            onConfirm={handleConfirm}
+          />
         )}
       </main>
+
+      {showAddSheet && (
+        <AddItemSheet
+          onSelect={handleAddMenuItem}
+          onClose={() => setShowAddSheet(false)}
+        />
+      )}
     </div>
   );
 }
-
-export default App;

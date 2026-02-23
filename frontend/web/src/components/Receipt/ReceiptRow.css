@@ -1,0 +1,177 @@
+.receipt-row {
+    display: flex;
+    align-items: center;
+    padding: 12px 20px;
+    transition: background 0.15s;
+    border-bottom: 1px solid #f3f4f6;
+    gap: 10px;
+}
+
+.receipt-row:last-child {
+    border-bottom: none;
+}
+
+.receipt-row:hover {
+    background: var(--background);
+}
+
+.receipt-row.unknown {
+    background: rgba(251, 133, 0, 0.05);
+    border-left: 4px solid var(--primary);
+}
+
+/* ─── Remove Button ──────────────────────────────────────── */
+.remove-btn {
+    flex-shrink: 0;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    color: #9ca3af;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: var(--font-body);
+}
+
+.remove-btn:hover {
+    background: rgba(239, 68, 68, 0.1);
+    border-color: rgba(239, 68, 68, 0.3);
+    color: #dc2626;
+}
+
+.receipt-row-left {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    flex: 1;
+    min-width: 0;
+}
+
+.item-name {
+    font-weight: 700;
+    font-size: 16px;
+    color: var(--text-heading);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--font-body);
+}
+
+.item-class {
+    font-size: 12px;
+    color: var(--text-subtitle);
+    font-family: var(--font-body);
+}
+
+.receipt-row-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+}
+
+.item-confidence {
+    font-size: 12px;
+    color: var(--secondary);
+    background: var(--tertiary);
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-weight: 600;
+}
+
+.item-price {
+    font-weight: 800;
+    font-size: 16px;
+    color: var(--secondary);
+    min-width: 72px;
+    text-align: right;
+    font-family: var(--font-body);
+}
+
+/* ─── Quantity Controls ──────────────────────────────────── */
+.qty-controls {
+    display: flex;
+    align-items: center;
+    background: var(--background);
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.qty-btn {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-body);
+    font-family: var(--font-body);
+    transition: all 0.15s;
+}
+
+.qty-btn:hover:not(:disabled) {
+    background: var(--tertiary);
+    color: var(--secondary);
+}
+
+.qty-btn:disabled {
+    color: #d1d5db;
+    cursor: not-allowed;
+}
+
+.qty-value {
+    min-width: 28px;
+    text-align: center;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text-heading);
+    font-family: var(--font-body);
+}
+
+/* ─── Unknown Badge ──────────────────────────────────────── */
+.unknown-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    background: var(--primary);
+    color: #ffffff;
+    border-radius: 50%;
+    font-size: 12px;
+    font-weight: 800;
+    flex-shrink: 0;
+}
+
+.unknown-badge.inline {
+    vertical-align: middle;
+}
+
+.assign-btn {
+    padding: 6px 14px;
+    background: #ffffff;
+    color: var(--primary);
+    border: 1px solid var(--primary);
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+    font-family: var(--font-body);
+}
+
+.assign-btn:hover {
+    background: var(--primary);
+    color: #ffffff;
+}

@@ -1,0 +1,95 @@
+.assign-form {
+    margin: 12px 20px;
+    padding: 16px;
+    background: rgba(142, 202, 230, 0.15);
+    border: 1px solid var(--tertiary);
+    border-radius: 12px;
+}
+
+.assign-title {
+    font-size: 14px;
+    color: var(--text-body);
+    margin-bottom: 12px;
+    font-weight: 500;
+}
+
+.assign-title strong {
+    color: var(--secondary);
+    font-weight: 700;
+}
+
+.assign-fields {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.assign-fields input {
+    flex: 1;
+    padding: 10px 12px;
+    background: #ffffff;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    color: var(--text-body);
+    font-size: 14px;
+    font-family: var(--font-body);
+    transition: outline 0.2s;
+}
+
+.assign-fields input:focus {
+    outline: 2px solid var(--tertiary);
+    border-color: transparent;
+}
+
+.assign-fields input::placeholder {
+    color: #9ca3af;
+}
+
+.assign-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.assign-save {
+    padding: 8px 20px;
+    background: var(--primary);
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: var(--font-body);
+}
+
+.assign-save:hover:not(:disabled) {
+    background: #e87a00;
+    transform: translateY(-1px);
+}
+
+.assign-save:disabled {
+    opacity: 0.5;
+    background: #d1d5db;
+    color: #f3f4f6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.assign-cancel {
+    padding: 8px 16px;
+    background: #ffffff;
+    color: var(--text-body);
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: var(--font-body);
+}
+
+.assign-cancel:hover {
+    border-color: var(--text-body);
+    color: var(--text-heading);
+}

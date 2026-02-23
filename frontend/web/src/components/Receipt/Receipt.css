@@ -1,0 +1,152 @@
+.receipt {
+    margin-top: 24px;
+    background: #ffffff;
+    border-radius: 16px;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+}
+
+.receipt-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 20px;
+    border-bottom: 1px dashed var(--tertiary);
+    background-color: var(--secondary);
+    color: #ffffff;
+}
+
+.receipt-header h2 {
+    font-size: 20px;
+    font-weight: 700;
+    color: #ffffff;
+}
+
+.item-count {
+    font-size: 13px;
+    color: var(--secondary);
+    background: var(--tertiary);
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-family: var(--font-body);
+    font-weight: 600;
+}
+
+.no-results {
+    padding: 24px 20px;
+    color: var(--text-subtitle);
+    text-align: center;
+}
+
+.receipt-items {
+    padding: 8px 0;
+}
+
+/* ─── Add Item Button ────────────────────────────────────── */
+.add-item-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: calc(100% - 40px);
+    margin: 12px 20px;
+    padding: 12px;
+    background: transparent;
+    color: var(--primary);
+    border: 2px dashed var(--primary);
+    border-radius: 12px;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: var(--font-body);
+}
+
+.add-item-btn:hover {
+    background: rgba(251, 133, 0, 0.08);
+    border-style: solid;
+}
+
+.add-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    background: var(--primary);
+    color: #ffffff;
+    border-radius: 50%;
+    font-size: 16px;
+    font-weight: 800;
+    line-height: 1;
+}
+
+/* ─── Total Row ──────────────────────────────────────────── */
+.receipt-total {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    border-top: 2px solid #e5e7eb;
+    background: var(--background);
+}
+
+.total-label {
+    font-size: 18px;
+    font-weight: 800;
+    color: var(--text-heading);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-family: var(--font-heading);
+}
+
+.total-price {
+    font-size: 26px;
+    font-weight: 800;
+    color: var(--primary);
+    font-family: var(--font-body);
+}
+
+/* ─── Confirm Button ─────────────────────────────────────── */
+.confirm-btn {
+    display: block;
+    width: calc(100% - 40px);
+    margin: 0 20px 20px;
+    padding: 16px;
+    background: var(--success);
+    color: #ffffff;
+    border: none;
+    border-radius: 12px;
+    font-size: 17px;
+    font-weight: 800;
+    font-family: var(--font-body);
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 4px 6px -1px rgba(22, 163, 74, 0.3);
+    letter-spacing: 0.5px;
+}
+
+.confirm-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px -2px rgba(22, 163, 74, 0.4);
+    background: #15803d;
+}
+
+.confirm-btn:disabled {
+    background: #d1d5db;
+    color: #9ca3af;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+/* ─── Hints ──────────────────────────────────────────────── */
+.unknown-hint {
+    padding: 16px 20px;
+    font-size: 13px;
+    color: var(--text-subtitle);
+    text-align: center;
+    background: rgba(251, 133, 0, 0.05);
+    border-top: 1px solid #e5e7eb;
+}
