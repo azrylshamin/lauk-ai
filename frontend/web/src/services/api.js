@@ -1,5 +1,40 @@
 import { API_URL } from "../config";
 
+// ---------------------------------------------------------------------------
+// Token helpers
+// ---------------------------------------------------------------------------
+function getToken() {
+    return localStorage.getItem("laukai_token");
+}
+
+/**
+ * Wrapper around fetch that auto-attaches the JWT Bearer token.
+ * On 401 responses, clears the stored token.
+ */
+async function authFetch(url, options = {}) {
+    const token = getToken();
+    const headers = { ...options.headers };
+
+    if (token) {
+        headers["Authorization"] = `Bearer ${token}`;
+    }
+
+    const res = await fetch(url, { ...options, headers });
+
+    // If unauthorized, clear the token
+    if (res.status === 401) {
+        localStorage.removeItem("laukai_token");
+        window.location.href = "/login";
+        throw new Error("Session expired. Please log in again.");
+    }
+
+    return res;
+}
+
+// ---------------------------------------------------------------------------
+// API functions
+// ---------------------------------------------------------------------------
+
 /**
  * Send an image to AI service for food detection.
  * @param {File} imageFile
@@ -9,7 +44,7 @@ export async function predictImage(imageFile) {
     const formData = new FormData();
     formData.append("file", imageFile);
 
-    const res = await fetch(`${API_URL}/api/predict`, {
+    const res = await authFetch(`${API_URL}/api/predict`, {
         method: "POST",
         body: formData,
     });
@@ -28,7 +63,7 @@ export async function predictImage(imageFile) {
  * @returns {Promise<Array>}
  */
 export async function fetchMenuItems() {
-    const res = await fetch(`${API_URL}/api/menu-items`);
+    const res = await authFetch(`${API_URL}/api/menu-items`);
     if (!res.ok) throw new Error("Failed to fetch menu items");
     return res.json();
 }
@@ -41,7 +76,7 @@ export async function fetchMenuItems() {
  * @returns {Promise<Object>} The created menu item
  */
 export async function assignMenuItem(yoloClass, name, price) {
-    const res = await fetch(`${API_URL}/api/menu-items`, {
+    const res = await authFetch(`${API_URL}/api/menu-items`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -77,7 +112,7 @@ export async function saveBill(items, total) {
         total: Math.round(total * 100) / 100,
     };
 
-    const res = await fetch(`${API_URL}/api/bills`, {
+    const res = await authFetch(`${API_URL}/api/bills`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
