@@ -3,7 +3,7 @@ const pool = require("../db/db");
 
 const router = Router();
 
-// Save a confirmed bill
+// Save a confirmed bill for the authenticated restaurant
 router.post("/", async (req, res) => {
     const client = await pool.connect();
     try {
@@ -16,8 +16,8 @@ router.post("/", async (req, res) => {
         await client.query("BEGIN");
 
         const { rows: billRows } = await client.query(
-            "INSERT INTO bills (total) VALUES ($1) RETURNING *",
-            [parseFloat(total)]
+            "INSERT INTO bills (total, restaurant_id) VALUES ($1, $2) RETURNING *",
+            [parseFloat(total), req.restaurantId]
         );
         const bill = billRows[0];
 
@@ -51,11 +51,12 @@ router.post("/", async (req, res) => {
     }
 });
 
-// List recent bills
-router.get("/", async (_req, res) => {
+// List recent bills for the authenticated restaurant
+router.get("/", async (req, res) => {
     try {
         const { rows } = await pool.query(
-            "SELECT * FROM bills ORDER BY created_at DESC LIMIT 50"
+            "SELECT * FROM bills WHERE restaurant_id = $1 ORDER BY created_at DESC LIMIT 50",
+            [req.restaurantId]
         );
         res.json(rows);
     } catch (err) {

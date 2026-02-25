@@ -51,7 +51,7 @@ router.post("/predict", upload.single("file"), async (req, res) => {
         }
 
         const predictions = await aiRes.json();
-        const { items, total } = await lookupMenuItems(predictions.detections);
+        const { items, total } = await lookupMenuItems(predictions.detections, req.restaurantId);
 
         res.json({
             items,

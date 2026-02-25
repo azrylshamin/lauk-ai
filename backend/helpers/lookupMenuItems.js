@@ -2,11 +2,16 @@ const pool = require("../db/db");
 
 /**
  * Look up menu items by yolo_class names and enrich detections.
+ * Scoped to a specific restaurant.
  * @param {Array<{class: string, confidence: number, bbox: Array}>} detections
+ * @param {number} restaurantId
  * @returns {Promise<{items: Array, total: number}>}
  */
-async function lookupMenuItems(detections) {
-    const { rows: menuItems } = await pool.query("SELECT * FROM menu_items");
+async function lookupMenuItems(detections, restaurantId) {
+    const { rows: menuItems } = await pool.query(
+        "SELECT * FROM menu_items WHERE restaurant_id = $1",
+        [restaurantId]
+    );
     const menuMap = new Map(menuItems.map((item) => [item.yolo_class, item]));
 
     let total = 0;
@@ -21,6 +26,7 @@ async function lookupMenuItems(detections) {
                 confidence: det.confidence,
                 bbox: det.bbox,
                 known: true,
+                menu_item_id: menuItem.id,
             };
         }
         return {

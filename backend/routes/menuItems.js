@@ -3,10 +3,13 @@ const pool = require("../db/db");
 
 const router = Router();
 
-// List all menu items
-router.get("/", async (_req, res) => {
+// List all menu items for the authenticated restaurant
+router.get("/", async (req, res) => {
     try {
-        const { rows } = await pool.query("SELECT * FROM menu_items ORDER BY id");
+        const { rows } = await pool.query(
+            "SELECT * FROM menu_items WHERE restaurant_id = $1 ORDER BY id",
+            [req.restaurantId]
+        );
         res.json(rows);
     } catch (err) {
         console.error("Menu items fetch error:", err);
@@ -14,7 +17,7 @@ router.get("/", async (_req, res) => {
     }
 });
 
-// Create a new menu item (assign unknown class)
+// Create a new menu item (assign unknown class) for the authenticated restaurant
 router.post("/", async (req, res) => {
     try {
         const { yolo_class, name, price } = req.body;
@@ -26,10 +29,10 @@ router.post("/", async (req, res) => {
         }
 
         const { rows } = await pool.query(
-            `INSERT INTO menu_items (yolo_class, name, price)
-             VALUES ($1, $2, $3)
+            `INSERT INTO menu_items (yolo_class, name, price, restaurant_id)
+             VALUES ($1, $2, $3, $4)
              RETURNING *`,
-            [yolo_class, name, parseFloat(price)]
+            [yolo_class, name, parseFloat(price), req.restaurantId]
         );
 
         res.status(201).json(rows[0]);
@@ -44,7 +47,7 @@ router.post("/", async (req, res) => {
     }
 });
 
-// Update a menu item
+// Update a menu item (only if it belongs to the authenticated restaurant)
 router.patch("/:id", async (req, res) => {
     try {
         const { id } = req.params;
@@ -68,8 +71,9 @@ router.patch("/:id", async (req, res) => {
         }
 
         values.push(id);
+        values.push(req.restaurantId);
         const { rows } = await pool.query(
-            `UPDATE menu_items SET ${fields.join(", ")} WHERE id = $${idx} RETURNING *`,
+            `UPDATE menu_items SET ${fields.join(", ")} WHERE id = $${idx} AND restaurant_id = $${idx + 1} RETURNING *`,
             values
         );
 
