@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { Camera, ClipboardList } from "lucide-react";
+import { Camera, ClipboardList, Settings } from "lucide-react";
 import { predictImage, assignMenuItem, saveBill } from "../../services/api";
 import Header from "../../components/Header/Header";
 import StatsBar from "../../components/StatsBar/StatsBar";
@@ -8,6 +8,7 @@ import Receipt from "../../components/Receipt/Receipt";
 import AddItemSheet from "../../components/AddItemSheet/AddItemSheet";
 import SuccessToast from "../../components/SuccessToast/SuccessToast";
 import HistoryTab from "../../components/HistoryTab/HistoryTab";
+import SettingsTab from "../../components/SettingsTab/SettingsTab";
 import "./DashboardPage.css";
 
 export default function DashboardPage() {
@@ -172,6 +173,12 @@ export default function DashboardPage() {
                 >
                     <ClipboardList size={16} /> History
                 </button>
+                <button
+                    className={`tab-btn ${activeTab === "settings" ? "active" : ""}`}
+                    onClick={() => setActiveTab("settings")}
+                >
+                    <Settings size={16} /> Settings
+                </button>
             </div>
 
             <main>
@@ -209,6 +216,7 @@ export default function DashboardPage() {
                 )}
 
                 {activeTab === "history" && <HistoryTab key={statsKey} />}
+                {activeTab === "settings" && <SettingsTab />}
             </main>
 
             {showAddSheet && (

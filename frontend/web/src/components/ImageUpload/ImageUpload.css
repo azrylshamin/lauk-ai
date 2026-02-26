@@ -11,22 +11,27 @@
     width: 100%;
     aspect-ratio: 4 / 3;
     max-height: 400px;
-    background: #ffffff;
-    border-radius: 16px;
-    border: 2px dashed var(--tertiary);
+    background: var(--surface);
+    border-radius: 20px;
+    border: 2px dashed rgba(2, 48, 71, 0.15);
+    /* Soft secondary color for dash */
     cursor: pointer;
     overflow: hidden;
-    transition: border-color 0.2s, background-color 0.2s;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+    box-shadow: var(--shadow-sm);
 }
 
 .upload-box:hover {
     border-color: var(--primary);
-    background-color: var(--background);
+    background-color: var(--primary-light);
+    background-color: rgba(251, 133, 0, 0.04);
 }
 
 .upload-placeholder {
-    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
     color: var(--text-subtitle);
     font-family: var(--font-body);
 }
@@ -34,8 +39,14 @@
 .upload-icon {
     font-size: 48px;
     display: block;
-    margin-bottom: 8px;
-    color: var(--tertiary);
+    color: var(--primary);
+    opacity: 0.8;
+    transition: transform 0.3s ease;
+}
+
+.upload-box:hover .upload-icon {
+    transform: translateY(-4px) scale(1.05);
+    opacity: 1;
 }
 
 .preview-img {
@@ -46,29 +57,31 @@
 }
 
 .detect-btn {
-    padding: 14px;
-    background: var(--primary);
+    padding: 16px;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
     color: #ffffff;
     border: none;
-    border-radius: 12px;
+    border-radius: 16px;
     font-size: 16px;
     font-weight: 700;
     font-family: var(--font-body);
     cursor: pointer;
-    transition: all 0.2s;
-    box-shadow: 0 4px 6px -1px rgba(251, 133, 0, 0.3);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: var(--shadow-primary);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 .detect-btn:hover:not(:disabled) {
     transform: translateY(-2px);
-    box-shadow: 0 6px 12px -2px rgba(251, 133, 0, 0.4);
-    background: #e87a00;
+    box-shadow: 0 12px 20px -6px rgba(251, 133, 0, 0.5);
+    background: linear-gradient(135deg, var(--primary-light) 0%, var(--primary) 100%);
 }
 
 .detect-btn:disabled {
-    background: #d1d5db;
-    color: #9ca3af;
+    background: #e2e8f0;
+    color: #94a3b8;
     cursor: not-allowed;
     transform: none;
     box-shadow: none;
+    text-shadow: none;
 }
