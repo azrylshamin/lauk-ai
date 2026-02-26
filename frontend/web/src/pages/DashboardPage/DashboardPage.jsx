@@ -1,12 +1,20 @@
 import { useState, useMemo } from "react";
+import { Camera, ClipboardList } from "lucide-react";
 import { predictImage, assignMenuItem, saveBill } from "../../services/api";
 import Header from "../../components/Header/Header";
+import StatsBar from "../../components/StatsBar/StatsBar";
 import ImageUpload from "../../components/ImageUpload/ImageUpload";
 import Receipt from "../../components/Receipt/Receipt";
 import AddItemSheet from "../../components/AddItemSheet/AddItemSheet";
 import SuccessToast from "../../components/SuccessToast/SuccessToast";
+import HistoryTab from "../../components/HistoryTab/HistoryTab";
+import "./DashboardPage.css";
 
 export default function DashboardPage() {
+    const [activeTab, setActiveTab] = useState("scan");
+    const [statsKey, setStatsKey] = useState(0);
+
+    // ── Scan state ──────────────────────────────────────────────
     const [image, setImage] = useState(null);
     const [preview, setPreview] = useState(null);
     const [loading, setLoading] = useState(false);
@@ -130,6 +138,7 @@ export default function DashboardPage() {
         try {
             await saveBill(editableItems, total);
             setConfirmed(true);
+            setStatsKey((k) => k + 1); // refresh stats
             setTimeout(() => {
                 setEditableItems(null);
                 setConfirmed(false);
@@ -147,36 +156,59 @@ export default function DashboardPage() {
     return (
         <div className="app">
             <Header />
+            <StatsBar refreshKey={statsKey} />
+
+            {/* Tab Bar */}
+            <div className="tab-bar">
+                <button
+                    className={`tab-btn ${activeTab === "scan" ? "active" : ""}`}
+                    onClick={() => setActiveTab("scan")}
+                >
+                    <Camera size={16} /> Scan
+                </button>
+                <button
+                    className={`tab-btn ${activeTab === "history" ? "active" : ""}`}
+                    onClick={() => setActiveTab("history")}
+                >
+                    <ClipboardList size={16} /> History
+                </button>
+            </div>
 
             <main>
-                <ImageUpload
-                    preview={preview}
-                    onFileChange={handleFileChange}
-                    onDetect={handleDetect}
-                    loading={loading}
-                    disabled={!image}
-                />
+                {activeTab === "scan" && (
+                    <>
+                        <ImageUpload
+                            preview={preview}
+                            onFileChange={handleFileChange}
+                            onDetect={handleDetect}
+                            loading={loading}
+                            disabled={!image}
+                        />
 
-                {error && <div className="error-box">{error}</div>}
-                {confirmed && <SuccessToast />}
+                        {error && <div className="error-box">{error}</div>}
+                        {confirmed && <SuccessToast />}
 
-                {editableItems && !confirmed && (
-                    <Receipt
-                        items={editableItems}
-                        itemCount={itemCount}
-                        total={total}
-                        hasUnknown={hasUnknown}
-                        confirming={confirming}
-                        assigningClass={assigningClass}
-                        onUpdateQty={updateQuantity}
-                        onRemove={removeItem}
-                        onStartAssign={setAssigningClass}
-                        onAssignSave={handleAssignSave}
-                        onAssignCancel={() => setAssigningClass(null)}
-                        onAddItem={() => setShowAddSheet(true)}
-                        onConfirm={handleConfirm}
-                    />
+                        {editableItems && !confirmed && (
+                            <Receipt
+                                items={editableItems}
+                                itemCount={itemCount}
+                                total={total}
+                                hasUnknown={hasUnknown}
+                                confirming={confirming}
+                                assigningClass={assigningClass}
+                                onUpdateQty={updateQuantity}
+                                onRemove={removeItem}
+                                onStartAssign={setAssigningClass}
+                                onAssignSave={handleAssignSave}
+                                onAssignCancel={() => setAssigningClass(null)}
+                                onAddItem={() => setShowAddSheet(true)}
+                                onConfirm={handleConfirm}
+                            />
+                        )}
+                    </>
                 )}
+
+                {activeTab === "history" && <HistoryTab key={statsKey} />}
             </main>
 
             {showAddSheet && (
