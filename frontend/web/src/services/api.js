@@ -128,6 +128,37 @@ export async function saveBill(items, total) {
 }
 
 /**
+ * Fetch dashboard stats for today.
+ * @returns {Promise<{billCount: number, revenue: number, average: number, accuracy: number|null}>}
+ */
+export async function fetchBillStats() {
+    const res = await authFetch(`${API_URL}/api/bills/stats`);
+    if (!res.ok) throw new Error("Failed to fetch stats");
+    return res.json();
+}
+
+/**
+ * Fetch recent bills for the authenticated restaurant.
+ * @returns {Promise<Array>}
+ */
+export async function fetchBills() {
+    const res = await authFetch(`${API_URL}/api/bills`);
+    if (!res.ok) throw new Error("Failed to fetch bills");
+    return res.json();
+}
+
+/**
+ * Fetch a single bill with its line items.
+ * @param {number} id
+ * @returns {Promise<Object>}
+ */
+export async function fetchBill(id) {
+    const res = await authFetch(`${API_URL}/api/bills/${id}`);
+    if (!res.ok) throw new Error("Failed to fetch bill");
+    return res.json();
+}
+
+/**
  * Check backend + AI service health.
  * @returns {Promise<Object>}
  */
