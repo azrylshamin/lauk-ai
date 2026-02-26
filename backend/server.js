@@ -14,6 +14,8 @@ const authRoutes = require("./routes/auth");
 const predictRoutes = require("./routes/predict");
 const menuItemsRoutes = require("./routes/menuItems");
 const billsRoutes = require("./routes/bills");
+const restaurantRoutes = require("./routes/restaurant");
+const employeesRoutes = require("./routes/employees");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -35,6 +37,8 @@ app.use("/api/auth", authRoutes);
 app.use("/api", authenticate, predictRoutes);
 app.use("/api/menu-items", authenticate, menuItemsRoutes);
 app.use("/api/bills", authenticate, billsRoutes);
+app.use("/api/restaurant", authenticate, restaurantRoutes);
+app.use("/api/employees", authenticate, employeesRoutes);
 
 // ---------------------------------------------------------------------------
 // Start

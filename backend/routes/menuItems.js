@@ -1,5 +1,6 @@
 const { Router } = require("express");
 const pool = require("../db/db");
+const { requireOwner } = require("../middleware/auth");
 
 const router = Router();
 
@@ -51,7 +52,7 @@ router.post("/", async (req, res) => {
 router.patch("/:id", async (req, res) => {
     try {
         const { id } = req.params;
-        const { name, price } = req.body;
+        const { name, price, active } = req.body;
 
         const fields = [];
         const values = [];
@@ -64,6 +65,10 @@ router.patch("/:id", async (req, res) => {
         if (price !== undefined) {
             fields.push(`price = $${idx++}`);
             values.push(parseFloat(price));
+        }
+        if (active !== undefined) {
+            fields.push(`active = $${idx++}`);
+            values.push(Boolean(active));
         }
 
         if (fields.length === 0) {
@@ -84,6 +89,27 @@ router.patch("/:id", async (req, res) => {
         res.json(rows[0]);
     } catch (err) {
         console.error("Menu item update error:", err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Delete a menu item (only if it belongs to the authenticated restaurant, owner only)
+router.delete("/:id", requireOwner, async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const { rows } = await pool.query(
+            "DELETE FROM menu_items WHERE id = $1 AND restaurant_id = $2 RETURNING *",
+            [id, req.restaurantId]
+        );
+
+        if (rows.length === 0) {
+            return res.status(404).json({ error: "Menu item not found" });
+        }
+
+        res.json({ message: "Menu item deleted", item: rows[0] });
+    } catch (err) {
+        console.error("Menu item delete error:", err);
         res.status(500).json({ error: err.message });
     }
 });
