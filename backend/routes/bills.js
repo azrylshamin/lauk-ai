@@ -3,7 +3,60 @@ const pool = require("../db/db");
 
 const router = Router();
 
-// Save a confirmed bill for the authenticated restaurant
+// ── Stats for the authenticated restaurant (today) ─────────────────────────
+router.get("/stats", async (req, res) => {
+    try {
+        const { rows } = await pool.query(
+            `SELECT
+                COUNT(*)::int                          AS bill_count,
+                COALESCE(SUM(total), 0)::numeric       AS revenue,
+                COALESCE(AVG(total), 0)::numeric       AS average
+             FROM bills
+             WHERE restaurant_id = $1
+               AND created_at::date = CURRENT_DATE`,
+            [req.restaurantId]
+        );
+
+        const stats = rows[0];
+        res.json({
+            billCount: stats.bill_count,
+            revenue: parseFloat(Number(stats.revenue).toFixed(2)),
+            average: parseFloat(Number(stats.average).toFixed(2)),
+            accuracy: null, // placeholder — will be computed when AI feedback loop is ready
+        });
+    } catch (err) {
+        console.error("Stats fetch error:", err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// ── Single bill with line items ─────────────────────────────────────────────
+router.get("/:id", async (req, res) => {
+    try {
+        const { rows: billRows } = await pool.query(
+            "SELECT * FROM bills WHERE id = $1 AND restaurant_id = $2",
+            [req.params.id, req.restaurantId]
+        );
+
+        if (billRows.length === 0) {
+            return res.status(404).json({ error: "Bill not found" });
+        }
+
+        const bill = billRows[0];
+
+        const { rows: items } = await pool.query(
+            "SELECT id, name, price, quantity FROM bill_items WHERE bill_id = $1 ORDER BY id",
+            [bill.id]
+        );
+
+        res.json({ ...bill, items });
+    } catch (err) {
+        console.error("Bill detail error:", err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// ── Save a confirmed bill ───────────────────────────────────────────────────
 router.post("/", async (req, res) => {
     const client = await pool.connect();
     try {
@@ -51,11 +104,17 @@ router.post("/", async (req, res) => {
     }
 });
 
-// List recent bills for the authenticated restaurant
+// ── List recent bills with item count ───────────────────────────────────────
 router.get("/", async (req, res) => {
     try {
         const { rows } = await pool.query(
-            "SELECT * FROM bills WHERE restaurant_id = $1 ORDER BY created_at DESC LIMIT 50",
+            `SELECT b.*,
+                    (SELECT COALESCE(SUM(bi.quantity), 0)
+                     FROM bill_items bi WHERE bi.bill_id = b.id)::int AS item_count
+             FROM bills b
+             WHERE b.restaurant_id = $1
+             ORDER BY b.created_at DESC
+             LIMIT 100`,
             [req.restaurantId]
         );
         res.json(rows);
