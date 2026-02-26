@@ -1,0 +1,403 @@
+/* ─── Settings Tab ────────────────────────────────────────── */
+.settings-tab {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+/* ─── Section ─────────────────────────────────────────────── */
+.settings-section {
+    background: #ffffff;
+    border-radius: 14px;
+    padding: 20px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+}
+
+.settings-section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+}
+
+.settings-section-header h3 {
+    font-size: 16px;
+    font-weight: 800;
+    color: var(--text-heading);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--font-body);
+}
+
+.settings-add-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 14px;
+    background: var(--primary);
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 700;
+    font-family: var(--font-body);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.settings-add-btn:hover {
+    background: #e97a00;
+    transform: translateY(-1px);
+}
+
+/* ─── Error / Success ─────────────────────────────────────── */
+.settings-error {
+    padding: 10px 14px;
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    border-radius: 10px;
+    color: #b91c1c;
+    font-size: 13px;
+    font-family: var(--font-body);
+    margin-bottom: 12px;
+}
+
+.settings-success {
+    padding: 10px 14px;
+    background: rgba(22, 163, 74, 0.1);
+    border: 1px solid rgba(22, 163, 74, 0.3);
+    border-radius: 10px;
+    color: #15803d;
+    font-size: 13px;
+    font-weight: 700;
+    font-family: var(--font-body);
+    margin-bottom: 12px;
+}
+
+/* ─── Add Form ────────────────────────────────────────────── */
+.settings-add-form {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 14px;
+    background: #f9fafb;
+    border-radius: 10px;
+    margin-bottom: 14px;
+    border: 1px dashed #d1d5db;
+}
+
+.settings-add-form input {
+    flex: 1;
+    min-width: 120px;
+    padding: 9px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 13px;
+    font-family: var(--font-body);
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.settings-add-form input:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(251, 133, 0, 0.12);
+}
+
+/* ─── Form (Restaurant Profile) ──────────────────────────── */
+.settings-form {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.settings-form label {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.settings-form label span {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text-subtitle);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.settings-form input {
+    padding: 10px 14px;
+    border: 1px solid #d1d5db;
+    border-radius: 10px;
+    font-size: 14px;
+    font-family: var(--font-body);
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.settings-form input:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(251, 133, 0, 0.12);
+}
+
+.settings-form input:disabled {
+    background: #f3f4f6;
+    color: var(--text-subtitle);
+    cursor: not-allowed;
+}
+
+/* ─── Save Button ─────────────────────────────────────────── */
+.settings-save-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 10px 20px;
+    background: var(--primary);
+    color: #ffffff;
+    border: none;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 700;
+    font-family: var(--font-body);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.settings-save-btn:hover:not(:disabled) {
+    background: #e97a00;
+    transform: translateY(-1px);
+}
+
+.settings-save-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* ─── Card List ───────────────────────────────────────────── */
+.settings-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.settings-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px 14px;
+    background: #f9fafb;
+    border-radius: 10px;
+    border: 1px solid #e5e7eb;
+    transition: all 0.2s;
+}
+
+.settings-card:hover {
+    border-color: #d1d5db;
+    background: #ffffff;
+}
+
+.settings-card.inactive {
+    opacity: 0.5;
+    background: #f3f4f6;
+}
+
+.settings-card-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+    min-width: 0;
+}
+
+.card-name {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-heading);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.card-class {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-subtitle);
+    background: #e5e7eb;
+    padding: 2px 8px;
+    border-radius: 6px;
+}
+
+.card-price {
+    font-size: 13px;
+    font-weight: 800;
+    color: var(--secondary);
+    margin-left: auto;
+    white-space: nowrap;
+}
+
+/* ─── Inline Edit ─────────────────────────────────────────── */
+.settings-card-edit {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+}
+
+.settings-card-edit input {
+    flex: 1;
+    min-width: 80px;
+    padding: 7px 10px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 13px;
+    font-family: var(--font-body);
+    outline: none;
+}
+
+.settings-card-edit input:focus {
+    border-color: var(--primary);
+}
+
+/* ─── Card Actions ────────────────────────────────────────── */
+.settings-card-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+}
+
+.icon-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: transparent;
+}
+
+.icon-btn.edit {
+    color: var(--primary);
+}
+
+.icon-btn.edit:hover {
+    background: rgba(251, 133, 0, 0.12);
+}
+
+.icon-btn.delete {
+    color: #b91c1c;
+}
+
+.icon-btn.delete:hover {
+    background: rgba(239, 68, 68, 0.12);
+}
+
+.icon-btn.delete.confirm {
+    color: #ffffff;
+    background: #ef4444;
+}
+
+.icon-btn.save {
+    color: var(--success);
+}
+
+.icon-btn.save:hover {
+    background: rgba(22, 163, 74, 0.12);
+}
+
+.icon-btn.cancel {
+    color: var(--text-subtitle);
+}
+
+.icon-btn.cancel:hover {
+    background: rgba(0, 0, 0, 0.06);
+}
+
+/* ─── Toggle Switch ───────────────────────────────────────── */
+.toggle-switch {
+    position: relative;
+    width: 38px;
+    height: 22px;
+    flex-shrink: 0;
+}
+
+.toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #d1d5db;
+    transition: 0.25s;
+    border-radius: 22px;
+}
+
+.toggle-slider::before {
+    content: "";
+    position: absolute;
+    height: 16px;
+    width: 16px;
+    left: 3px;
+    bottom: 3px;
+    background: #ffffff;
+    transition: 0.25s;
+    border-radius: 50%;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+}
+
+.toggle-switch input:checked+.toggle-slider {
+    background-color: var(--success);
+}
+
+.toggle-switch input:checked+.toggle-slider::before {
+    transform: translateX(16px);
+}
+
+/* ─── Role Badge ──────────────────────────────────────────── */
+.role-badge {
+    font-size: 10px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 3px 8px;
+    border-radius: 6px;
+}
+
+.role-badge.owner {
+    background: rgba(251, 133, 0, 0.15);
+    color: var(--primary);
+}
+
+.role-badge.staff {
+    background: rgba(142, 202, 230, 0.3);
+    color: var(--secondary);
+}
+
+/* ─── Empty / Loading ─────────────────────────────────────── */
+.settings-empty {
+    text-align: center;
+    color: var(--text-subtitle);
+    font-size: 13px;
+    padding: 20px 0;
+    font-family: var(--font-body);
+}
+
+.settings-loading {
+    text-align: center;
+    color: var(--text-subtitle);
+    font-size: 13px;
+    padding: 30px 0;
+    font-family: var(--font-body);
+}
