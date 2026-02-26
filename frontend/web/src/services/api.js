@@ -158,6 +158,121 @@ export async function fetchBill(id) {
     return res.json();
 }
 
+// ---------------------------------------------------------------------------
+// Menu item management
+// ---------------------------------------------------------------------------
+
+/**
+ * Update a menu item (name, price, active).
+ * @param {number} id
+ * @param {Object} fields - { name?, price?, active? }
+ * @returns {Promise<Object>}
+ */
+export async function updateMenuItem(id, fields) {
+    const res = await authFetch(`${API_URL}/api/menu-items/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(fields),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Failed to update menu item");
+    return data;
+}
+
+/**
+ * Delete a menu item.
+ * @param {number} id
+ * @returns {Promise<Object>}
+ */
+export async function deleteMenuItem(id) {
+    const res = await authFetch(`${API_URL}/api/menu-items/${id}`, {
+        method: "DELETE",
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Failed to delete menu item");
+    return data;
+}
+
+// ---------------------------------------------------------------------------
+// Restaurant profile
+// ---------------------------------------------------------------------------
+
+/**
+ * Fetch the authenticated restaurant's profile.
+ * @returns {Promise<Object>}
+ */
+export async function fetchRestaurant() {
+    const res = await authFetch(`${API_URL}/api/restaurant`);
+    if (!res.ok) throw new Error("Failed to fetch restaurant");
+    return res.json();
+}
+
+/**
+ * Update the restaurant profile.
+ * @param {Object} fields - { name?, address?, phone? }
+ * @returns {Promise<Object>}
+ */
+export async function updateRestaurant(fields) {
+    const res = await authFetch(`${API_URL}/api/restaurant`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(fields),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Failed to update restaurant");
+    return data;
+}
+
+// ---------------------------------------------------------------------------
+// Employee management
+// ---------------------------------------------------------------------------
+
+/**
+ * Fetch all employees belonging to the authenticated restaurant.
+ * @returns {Promise<Array>}
+ */
+export async function fetchEmployees() {
+    const res = await authFetch(`${API_URL}/api/employees`);
+    if (!res.ok) throw new Error("Failed to fetch employees");
+    return res.json();
+}
+
+/**
+ * Invite a new staff member to the restaurant.
+ * @param {string} name
+ * @param {string} email
+ * @param {string} password
+ * @returns {Promise<Object>}
+ */
+export async function inviteEmployee(name, email, password) {
+    const res = await authFetch(`${API_URL}/api/auth/invite`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, email, password }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Failed to invite employee");
+    return data;
+}
+
+/**
+ * Remove a staff member from the restaurant.
+ * @param {number} id
+ * @returns {Promise<Object>}
+ */
+export async function removeEmployee(id) {
+    const res = await authFetch(`${API_URL}/api/employees/${id}`, {
+        method: "DELETE",
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Failed to remove employee");
+    return data;
+}
+
+// ---------------------------------------------------------------------------
+// Health check
+// ---------------------------------------------------------------------------
+
 /**
  * Check backend + AI service health.
  * @returns {Promise<Object>}
