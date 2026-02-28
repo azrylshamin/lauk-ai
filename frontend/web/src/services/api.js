@@ -270,6 +270,44 @@ export async function removeEmployee(id) {
 }
 
 // ---------------------------------------------------------------------------
+// Customer (public) endpoints
+// ---------------------------------------------------------------------------
+
+/**
+ * Fetch all restaurants (public, no auth).
+ * @returns {Promise<Array>}
+ */
+export async function fetchPublicRestaurants() {
+    const res = await fetch(`${API_URL}/api/customer/restaurants`);
+    if (!res.ok) throw new Error("Failed to fetch restaurants");
+    return res.json();
+}
+
+/**
+ * Upload image and get price estimate for a specific restaurant (public, no auth).
+ * @param {number} restaurantId
+ * @param {File} imageFile
+ * @returns {Promise<{items: Array, total: number, count: number}>}
+ */
+export async function estimateImage(restaurantId, imageFile) {
+    const formData = new FormData();
+    formData.append("file", imageFile);
+
+    const res = await fetch(`${API_URL}/api/customer/restaurants/${restaurantId}/estimate`, {
+        method: "POST",
+        body: formData,
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+        throw new Error(data.detail || data.error || "Unknown error");
+    }
+
+    return data;
+}
+
+// ---------------------------------------------------------------------------
 // Health check
 // ---------------------------------------------------------------------------
 
