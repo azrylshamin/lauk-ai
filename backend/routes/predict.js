@@ -21,7 +21,7 @@ const upload = multer({
 });
 
 // Proxy image to ai-service for prediction, then enrich with menu data
-router.post("/predict", upload.single("file"), async (req, res) => {
+router.post("/", upload.single("file"), async (req, res) => {
     try {
         if (!req.file) {
             return res.status(400).json({ error: "No image file provided" });
