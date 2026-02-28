@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
-import { Camera, ClipboardList, Settings } from "lucide-react";
+import { Camera, ClipboardList, Settings, Store } from "lucide-react";
 import { predictImage, assignMenuItem, saveBill } from "../../services/api";
+import { useAuth } from "../../contexts/AuthContext";
 import Header from "../../components/Header/Header";
 import StatsBar from "../../components/StatsBar/StatsBar";
 import ImageUpload from "../../components/ImageUpload/ImageUpload";
@@ -10,8 +11,10 @@ import SuccessToast from "../../components/SuccessToast/SuccessToast";
 import HistoryTab from "../../components/HistoryTab/HistoryTab";
 import SettingsTab from "../../components/SettingsTab/SettingsTab";
 import "./DashboardPage.css";
+import "./DashboardLayout.css"; // Responsive layout CSS
 
 export default function DashboardPage() {
+    const { user } = useAuth();
     const [activeTab, setActiveTab] = useState("scan");
     const [statsKey, setStatsKey] = useState(0);
 
@@ -155,68 +158,85 @@ export default function DashboardPage() {
 
     // ── Render ─────────────────────────────────────────────────
     return (
-        <div className="app">
-            <Header />
-            <StatsBar refreshKey={statsKey} />
+        <div className="dashboard-wrapper">
+            {/* Sidebar / Bottom Navigation */}
+            <nav className="dashboard-nav">
+                {/* Desktop Branding (Hidden on mobile via flex layout logic/position) */}
+                <div className="dashboard-brand" style={{ display: 'none' /* handled mostly by media queries but forcing structure here may need css tweak */ }}>
+                    <h1>LaukAI</h1>
+                    <p>Food Detection System</p>
+                </div>
+                {/* We use CSS media queries to show branding only in sidebar mode */}
+                <style>{`
+                  @media (min-width: 768px) {
+                      .dashboard-brand { display: block !important; }
+                  }
+                `}</style>
 
-            {/* Tab Bar */}
-            <div className="tab-bar">
                 <button
-                    className={`tab-btn ${activeTab === "scan" ? "active" : ""}`}
+                    className={`nav-item ${activeTab === "scan" ? "active" : ""}`}
                     onClick={() => setActiveTab("scan")}
                 >
-                    <Camera size={16} /> Scan
+                    <Camera size={20} className="nav-icon" /> <span>Scan</span>
                 </button>
                 <button
-                    className={`tab-btn ${activeTab === "history" ? "active" : ""}`}
+                    className={`nav-item ${activeTab === "history" ? "active" : ""}`}
                     onClick={() => setActiveTab("history")}
                 >
-                    <ClipboardList size={16} /> History
+                    <ClipboardList size={20} className="nav-icon" /> <span>History</span>
                 </button>
                 <button
-                    className={`tab-btn ${activeTab === "settings" ? "active" : ""}`}
+                    className={`nav-item ${activeTab === "settings" ? "active" : ""}`}
                     onClick={() => setActiveTab("settings")}
                 >
-                    <Settings size={16} /> Settings
+                    <Settings size={20} className="nav-icon" /> <span>Settings</span>
                 </button>
-            </div>
+            </nav>
 
-            <main>
-                {activeTab === "scan" && (
-                    <>
-                        <ImageUpload
-                            preview={preview}
-                            onFileChange={handleFileChange}
-                            onDetect={handleDetect}
-                            loading={loading}
-                            disabled={!image}
-                        />
+            {/* Main Content Area */}
+            <main className="dashboard-content">
+                <Header />
 
-                        {error && <div className="error-box">{error}</div>}
-                        {confirmed && <SuccessToast />}
+                {/* Only show Stats on Scan and History tabs for a cleaner settings view */}
+                {activeTab !== "settings" && <StatsBar refreshKey={statsKey} />}
 
-                        {editableItems && !confirmed && (
-                            <Receipt
-                                items={editableItems}
-                                itemCount={itemCount}
-                                total={total}
-                                hasUnknown={hasUnknown}
-                                confirming={confirming}
-                                assigningClass={assigningClass}
-                                onUpdateQty={updateQuantity}
-                                onRemove={removeItem}
-                                onStartAssign={setAssigningClass}
-                                onAssignSave={handleAssignSave}
-                                onAssignCancel={() => setAssigningClass(null)}
-                                onAddItem={() => setShowAddSheet(true)}
-                                onConfirm={handleConfirm}
+                <div className="tab-content-container">
+                    {activeTab === "scan" && (
+                        <div className="scan-layout">
+                            <ImageUpload
+                                preview={preview}
+                                onFileChange={handleFileChange}
+                                onDetect={handleDetect}
+                                loading={loading}
+                                disabled={!image}
                             />
-                        )}
-                    </>
-                )}
 
-                {activeTab === "history" && <HistoryTab key={statsKey} />}
-                {activeTab === "settings" && <SettingsTab />}
+                            {error && <div className="error-box">{error}</div>}
+                            {confirmed && <SuccessToast />}
+
+                            {editableItems && !confirmed && (
+                                <Receipt
+                                    items={editableItems}
+                                    itemCount={itemCount}
+                                    total={total}
+                                    hasUnknown={hasUnknown}
+                                    confirming={confirming}
+                                    assigningClass={assigningClass}
+                                    onUpdateQty={updateQuantity}
+                                    onRemove={removeItem}
+                                    onStartAssign={setAssigningClass}
+                                    onAssignSave={handleAssignSave}
+                                    onAssignCancel={() => setAssigningClass(null)}
+                                    onAddItem={() => setShowAddSheet(true)}
+                                    onConfirm={handleConfirm}
+                                />
+                            )}
+                        </div>
+                    )}
+
+                    {activeTab === "history" && <HistoryTab key={statsKey} />}
+                    {activeTab === "settings" && <SettingsTab />}
+                </div>
             </main>
 
             {showAddSheet && (
