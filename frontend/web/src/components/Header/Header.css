@@ -73,21 +73,19 @@
 }
 
 .health-btn {
-    position: absolute;
-    top: 24px;
-    left: 50%;
-    transform: translateX(-50%);
     opacity: 0.5;
-    padding: 4px 12px;
+    padding: 6px 14px;
     background: transparent;
     color: var(--text-subtitle);
-    border: 1px solid transparent;
+    border: 1px solid var(--border-light);
     border-radius: 99px;
     cursor: pointer;
     font-size: 11px;
     font-family: var(--font-body);
     font-weight: 600;
     transition: all 0.2s ease;
+    margin-top: 16px;
+    display: inline-block;
 }
 
 .health-btn:hover {
@@ -95,4 +93,23 @@
     background: var(--tertiary);
     color: var(--secondary);
     border-color: rgba(224, 242, 254, 0.8);
+}
+
+@media (min-width: 768px) {
+    .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        text-align: left;
+        padding: 0 0 28px 0;
+    }
+
+    .health-btn {
+        margin-top: 0;
+        margin-left: 16px;
+    }
+
+    .header-user {
+        margin-left: auto;
+    }
 }
