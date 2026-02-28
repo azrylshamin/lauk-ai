@@ -4,6 +4,7 @@ import ProtectedRoute from "./components/ProtectedRoute/ProtectedRoute";
 import LoginPage from "./pages/LoginPage/LoginPage";
 import RegisterPage from "./pages/RegisterPage/RegisterPage";
 import DashboardPage from "./pages/DashboardPage/DashboardPage";
+import CustomerPage from "./pages/CustomerPage/CustomerPage";
 
 export default function App() {
   const { user, loading } = useAuth();
@@ -18,19 +19,22 @@ export default function App() {
 
   return (
     <Routes>
-      {/* Public routes */}
+      {/* Customer landing page (public) */}
+      <Route path="/" element={<CustomerPage />} />
+
+      {/* Auth routes */}
       <Route
         path="/login"
-        element={user ? <Navigate to="/" replace /> : <LoginPage />}
+        element={user ? <Navigate to="/dashboard" replace /> : <LoginPage />}
       />
       <Route
         path="/register"
-        element={user ? <Navigate to="/" replace /> : <RegisterPage />}
+        element={user ? <Navigate to="/dashboard" replace /> : <RegisterPage />}
       />
 
-      {/* Protected routes */}
+      {/* Staff/owner dashboard (protected) */}
       <Route
-        path="/"
+        path="/dashboard"
         element={
           <ProtectedRoute>
             <DashboardPage />

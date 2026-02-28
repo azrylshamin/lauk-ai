@@ -33,7 +33,7 @@ export default function RegisterPage() {
 
         try {
             await register(name, email, password, restaurantName);
-            navigate("/", { replace: true });
+            navigate("/dashboard", { replace: true });
         } catch (err) {
             setError(err.message);
         } finally {
