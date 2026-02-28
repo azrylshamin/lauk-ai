@@ -16,6 +16,7 @@ const menuItemsRoutes = require("./routes/menuItems");
 const billsRoutes = require("./routes/bills");
 const restaurantRoutes = require("./routes/restaurant");
 const employeesRoutes = require("./routes/employees");
+const customerRoutes = require("./routes/customer");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -32,9 +33,10 @@ app.use(express.json());
 // Public routes
 app.use("/api/health", healthRoutes);
 app.use("/api/auth", authRoutes);
+app.use("/api/customer", customerRoutes);
 
 // Protected routes (require JWT)
-app.use("/api", authenticate, predictRoutes);
+app.use("/api/predict", authenticate, predictRoutes);
 app.use("/api/menu-items", authenticate, menuItemsRoutes);
 app.use("/api/bills", authenticate, billsRoutes);
 app.use("/api/restaurant", authenticate, restaurantRoutes);
