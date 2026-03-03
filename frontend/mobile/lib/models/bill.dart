@@ -60,12 +60,18 @@ class BillStats {
   final double revenue;
   final double average;
   final double? accuracy;
+  final double? revenueGrowth;
+  final String? topItem;
+  final List<Bill> recentTransactions;
 
   BillStats({
     required this.billCount,
     required this.revenue,
     required this.average,
     this.accuracy,
+    this.revenueGrowth,
+    this.topItem,
+    this.recentTransactions = const [],
   });
 
   factory BillStats.fromJson(Map<String, dynamic> json) {
@@ -84,6 +90,17 @@ class BillStats {
               ? double.tryParse(json['accuracy'])
               : json['accuracy']?.toDouble())
           : null,
+      revenueGrowth: json['revenueGrowth'] != null
+          ? (json['revenueGrowth'] is String
+              ? double.tryParse(json['revenueGrowth'])
+              : json['revenueGrowth']?.toDouble())
+          : null,
+      topItem: json['topItem'],
+      recentTransactions: json['recentTransactions'] != null
+          ? (json['recentTransactions'] as List)
+              .map((b) => Bill.fromJson(b))
+              .toList()
+          : [],
     );
   }
 }
