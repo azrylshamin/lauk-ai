@@ -2,9 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
-import '../../widgets/stats_bar.dart';
+import 'home_tab.dart';
 import 'scan_tab.dart';
 import 'history_tab.dart';
+import 'menu_tab.dart';
 import 'settings_tab.dart';
 
 class DashboardPage extends StatefulWidget {
@@ -16,21 +17,28 @@ class DashboardPage extends StatefulWidget {
 
 class _DashboardPageState extends State<DashboardPage> {
   int _currentTab = 0;
-  final _statsBarKey = GlobalKey<StatsBarState>();
 
   void _onTabChanged(int index) {
+    if (index == 2) {
+      // Optional: Handle specifics when scanner is opened
+    }
     setState(() => _currentTab = index);
-    _statsBarKey.currentState?.refresh();
   }
 
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
+    
+    // Hide standard app bar for HomeTab and HistoryTab as they have their own headers
+    final bool showAppBar = _currentTab != 0 && _currentTab != 1;
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text('LaukAI', style: GoogleFonts.outfit(fontWeight: FontWeight.w700)),
+      backgroundColor: const Color(0xFFF7F7F9),
+      appBar: showAppBar ? AppBar(
+        title: Text('LaukAI', style: GoogleFonts.outfit(fontWeight: FontWeight.w800, color: const Color(0xFF12121D))),
         centerTitle: false,
+        backgroundColor: Colors.transparent,
+        elevation: 0,
         actions: [
           if (auth.user != null)
             Padding(
@@ -38,12 +46,12 @@ class _DashboardPageState extends State<DashboardPage> {
               child: Center(
                 child: Text(
                   auth.user!.restaurantName,
-                  style: TextStyle(color: Colors.grey[600], fontSize: 13),
+                  style: GoogleFonts.inter(color: Colors.grey[600], fontSize: 13, fontWeight: FontWeight.w600),
                 ),
               ),
             ),
           IconButton(
-            icon: const Icon(Icons.logout),
+            icon: const Icon(Icons.logout, color: Color(0xFFfb8500)),
             onPressed: () async {
               await auth.logout();
               if (context.mounted) {
@@ -53,31 +61,86 @@ class _DashboardPageState extends State<DashboardPage> {
             tooltip: 'Sign Out',
           ),
         ],
-      ),
-      body: Column(
+      ) : null,
+      body: IndexedStack(
+        index: _currentTab,
         children: [
-          StatsBar(key: _statsBarKey),
-          const SizedBox(height: 8),
-          Expanded(
-            child: IndexedStack(
-              index: _currentTab,
-              children: [
-                ScanTab(onBillCreated: () => _statsBarKey.currentState?.refresh()),
-                const HistoryTab(),
-                const SettingsTab(),
-              ],
-            ),
-          ),
+          HomeTab(onNavigateToHistory: () => _onTabChanged(1)),
+          const HistoryTab(),
+          ScanTab(onBillCreated: () {
+            // After successful scan & bill creation, go to history or home
+            _onTabChanged(1); 
+          }),
+          const MenuTab(),
+          const SettingsTab(),
         ],
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _currentTab,
-        onTap: _onTabChanged,
-        selectedItemColor: const Color(0xFFfb8500),
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.qr_code_scanner), label: 'Scan'),
-          BottomNavigationBarItem(icon: Icon(Icons.history), label: 'History'),
-          BottomNavigationBarItem(icon: Icon(Icons.settings), label: 'Settings'),
+      floatingActionButton: Container(
+        padding: const EdgeInsets.all(4),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          shape: BoxShape.circle,
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFFfb8500).withOpacity(0.3),
+              blurRadius: 16,
+              offset: const Offset(0, 8),
+            ),
+          ],
+        ),
+        child: FloatingActionButton(
+          backgroundColor: const Color(0xFFfb8500),
+          foregroundColor: Colors.white,
+          elevation: 0,
+          onPressed: () => _onTabChanged(2),
+          child: const Icon(Icons.qr_code_scanner, size: 28),
+        ),
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+      bottomNavigationBar: BottomAppBar(
+        color: Colors.white,
+        elevation: 10,
+        shadowColor: Colors.black.withOpacity(0.1),
+        shape: const CircularNotchedRectangle(),
+        notchMargin: 8,
+        height: 70,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: [
+            _buildNavItem(Icons.home_filled, 'HOME', 0),
+            _buildNavItem(Icons.receipt_long, 'HISTORY', 1),
+            const SizedBox(width: 48), // Space for FAB
+            _buildNavItem(Icons.restaurant_menu, 'MENU', 3),
+            _buildNavItem(Icons.settings, 'SETTINGS', 4),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNavItem(IconData icon, String label, int index) {
+    final isSelected = _currentTab == index;
+    return GestureDetector(
+      onTap: () => _onTabChanged(index),
+      behavior: HitTestBehavior.opaque,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            icon,
+            color: isSelected ? const Color(0xFFfb8500) : Colors.blueGrey[300],
+            size: 24,
+          ),
+          const SizedBox(height: 4),
+          Text(
+            label,
+            style: GoogleFonts.inter(
+              fontSize: 10,
+              fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+              color: isSelected ? const Color(0xFFfb8500) : Colors.blueGrey[300],
+            ),
+          ),
         ],
       ),
     );
