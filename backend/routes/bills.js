@@ -6,6 +6,7 @@ const router = Router();
 // ── Stats for the authenticated restaurant (today) ─────────────────────────
 router.get("/stats", async (req, res) => {
     try {
+        // Today's stats
         const { rows } = await pool.query(
             `SELECT
                 COUNT(*)::int                          AS bill_count,
@@ -17,12 +18,59 @@ router.get("/stats", async (req, res) => {
             [req.restaurantId]
         );
 
+        // Yesterday's revenue for growth calculation
+        const { rows: yesterdayRows } = await pool.query(
+            `SELECT COALESCE(SUM(total), 0)::numeric AS revenue
+             FROM bills
+             WHERE restaurant_id = $1
+               AND created_at::date = CURRENT_DATE - 1`,
+            [req.restaurantId]
+        );
+
+        // Top selling item today
+        const { rows: topItemRows } = await pool.query(
+            `SELECT bi.name, SUM(bi.quantity)::int AS total_qty
+             FROM bill_items bi
+             JOIN bills b ON b.id = bi.bill_id
+             WHERE b.restaurant_id = $1
+               AND b.created_at::date = CURRENT_DATE
+             GROUP BY bi.name
+             ORDER BY total_qty DESC
+             LIMIT 1`,
+            [req.restaurantId]
+        );
+
+        // 3 most recent bills
+        const { rows: recentRows } = await pool.query(
+            `SELECT b.*,
+                    (SELECT COALESCE(SUM(bi.quantity), 0)
+                     FROM bill_items bi WHERE bi.bill_id = b.id)::int AS item_count
+             FROM bills b
+             WHERE b.restaurant_id = $1
+             ORDER BY b.created_at DESC
+             LIMIT 3`,
+            [req.restaurantId]
+        );
+
         const stats = rows[0];
+        const todayRevenue = parseFloat(stats.revenue);
+        const yesterdayRevenue = parseFloat(yesterdayRows[0].revenue);
+
+        let revenueGrowth = null;
+        if (yesterdayRevenue > 0) {
+            revenueGrowth = parseFloat(
+                (((todayRevenue - yesterdayRevenue) / yesterdayRevenue) * 100).toFixed(1)
+            );
+        }
+
         res.json({
             billCount: stats.bill_count,
             revenue: parseFloat(Number(stats.revenue).toFixed(2)),
             average: parseFloat(Number(stats.average).toFixed(2)),
             accuracy: null, // placeholder — will be computed when AI feedback loop is ready
+            revenueGrowth,
+            topItem: topItemRows.length > 0 ? topItemRows[0].name : null,
+            recentTransactions: recentRows,
         });
     } catch (err) {
         console.error("Stats fetch error:", err);
