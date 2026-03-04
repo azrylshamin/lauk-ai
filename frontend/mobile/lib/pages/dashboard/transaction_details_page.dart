@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import '../../models/bill.dart';
 import '../../services/bill_service.dart';
+import '../../widgets/void_transaction_sheet.dart';
 
 class TransactionDetailsPage extends StatefulWidget {
   final int billId;
@@ -26,52 +27,49 @@ class _TransactionDetailsPageState extends State<TransactionDetailsPage> {
   }
 
   Future<void> _voidTransaction() async {
-    final confirmed = await showDialog<bool>(
+    final confirmed = await showModalBottomSheet<bool>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Text('Void Transaction', style: GoogleFonts.outfit(fontWeight: FontWeight.w700)),
-        content: Text(
-          'Are you sure you want to void this transaction? This action cannot be undone.',
-          style: GoogleFonts.inter(color: const Color(0xFF6E7191)),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: Text('Cancel', style: GoogleFonts.inter(color: const Color(0xFF6E7191))),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: Text('Void', style: GoogleFonts.inter(color: const Color(0xFFED2E7E), fontWeight: FontWeight.w600)),
-          ),
-        ],
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => StatefulBuilder(
+        builder: (BuildContext context, StateSetter setModalState) {
+          return VoidTransactionSheet(
+            bill: _bill!,
+            isVoiding: _voiding,
+            onConfirmVoid: () async {
+              setModalState(() => _voiding = true);
+              try {
+                await _billService.deleteBill(widget.billId);
+                if (mounted) {
+                  Navigator.pop(ctx, true); // Close modal returning true
+                }
+              } catch (e) {
+                if (mounted) {
+                  setModalState(() => _voiding = false);
+                  Navigator.pop(ctx, false); // Close modal returning false
+                }
+              }
+            },
+          );
+        }
       ),
     );
 
-    if (confirmed != true) return;
-
-    setState(() => _voiding = true);
-    try {
-      await _billService.deleteBill(widget.billId);
-      if (mounted) {
-        Navigator.pop(context, true);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Transaction voided successfully', style: GoogleFonts.inter()),
-            backgroundColor: const Color(0xFFfb8500),
-          ),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() => _voiding = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to void transaction', style: GoogleFonts.inter()),
-            backgroundColor: const Color(0xFFED2E7E),
-          ),
-        );
-      }
+    if (confirmed == true && mounted) {
+      Navigator.pop(context, true); // Pop the detail screen
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Transaction voided successfully', style: GoogleFonts.inter()),
+          backgroundColor: const Color(0xFFfb8500),
+        ),
+      );
+    } else if (confirmed == false && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to void transaction', style: GoogleFonts.inter()),
+          backgroundColor: const Color(0xFFED2E7E),
+        ),
+      );
     }
   }
 
@@ -363,24 +361,15 @@ class _TransactionDetailsPageState extends State<TransactionDetailsPage> {
                               
                               const SizedBox(height: 48),
                               TextButton(
-                                onPressed: _voiding ? null : _voidTransaction,
-                                child: _voiding
-                                    ? const SizedBox(
-                                        width: 20,
-                                        height: 20,
-                                        child: CircularProgressIndicator(
-                                          strokeWidth: 2,
-                                          color: Color(0xFFED2E7E),
-                                        ),
-                                      )
-                                    : Text(
-                                        'Void Transaction',
-                                        style: GoogleFonts.inter(
-                                          fontSize: 15,
-                                          fontWeight: FontWeight.w600,
-                                          color: const Color(0xFFED2E7E),
-                                        ),
-                                      ),
+                                onPressed: _voidTransaction,
+                                child: Text(
+                                  'Void Transaction',
+                                  style: GoogleFonts.inter(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w600,
+                                    color: const Color(0xFFED2E7E),
+                                  ),
+                                ),
                               ),
                               const SizedBox(height: 48),
                             ],
