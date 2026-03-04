@@ -29,8 +29,8 @@ class _DashboardPageState extends State<DashboardPage> {
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
     
-    // Hide standard app bar for HomeTab and HistoryTab as they have their own headers
-    final bool showAppBar = _currentTab != 0 && _currentTab != 1;
+    // Hide standard app bar for HomeTab, HistoryTab, and ScanTab as they have their own headers
+    final bool showAppBar = _currentTab != 0 && _currentTab != 1 && _currentTab != 2;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF7F7F9),
@@ -67,9 +67,15 @@ class _DashboardPageState extends State<DashboardPage> {
         children: [
           HomeTab(onNavigateToHistory: () => _onTabChanged(1)),
           const HistoryTab(),
-          ScanTab(onBillCreated: () {
+          ScanTab(onBillCreated: (String action) {
             // After successful scan & bill creation, go to history or home
-            _onTabChanged(1); 
+            if (action == 'HOME') {
+              _onTabChanged(0);
+            } else if (action == 'SCAN') {
+              // Stay on scan tab, it's already reset internally
+            } else {
+              _onTabChanged(1); // fallback
+            }
           }),
           const MenuTab(),
           const SettingsTab(),
