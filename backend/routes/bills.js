@@ -152,6 +152,34 @@ router.post("/", async (req, res) => {
     }
 });
 
+// ── Void (delete) a bill ────────────────────────────────────────────────────
+router.delete("/:id", async (req, res) => {
+    const client = await pool.connect();
+    try {
+        const { rows } = await client.query(
+            "SELECT id FROM bills WHERE id = $1 AND restaurant_id = $2",
+            [req.params.id, req.restaurantId]
+        );
+
+        if (rows.length === 0) {
+            return res.status(404).json({ error: "Bill not found" });
+        }
+
+        await client.query("BEGIN");
+        await client.query("DELETE FROM bill_items WHERE bill_id = $1", [req.params.id]);
+        await client.query("DELETE FROM bills WHERE id = $1", [req.params.id]);
+        await client.query("COMMIT");
+
+        res.json({ message: "Bill voided successfully" });
+    } catch (err) {
+        await client.query("ROLLBACK");
+        console.error("Bill delete error:", err);
+        res.status(500).json({ error: err.message });
+    } finally {
+        client.release();
+    }
+});
+
 // ── List recent bills with item count ───────────────────────────────────────
 router.get("/", async (req, res) => {
     try {
