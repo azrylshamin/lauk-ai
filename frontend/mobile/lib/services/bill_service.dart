@@ -30,14 +30,22 @@ class BillService {
     throw Exception('Failed to load bill');
   }
 
-  Future<void> createBill(
+  Future<void> deleteBill(int id) async {
+    final response = await _api.delete('/api/bills/$id');
+    if (response.statusCode != 200) {
+      throw Exception('Failed to void bill');
+    }
+  }
+
+  Future<Bill> createBill(
       List<Map<String, dynamic>> items, double total) async {
     final response = await _api.post('/api/bills', {
       'items': items,
       'total': total,
     });
-    if (response.statusCode != 201) {
-      throw Exception('Failed to create bill');
+    if (response.statusCode == 201) {
+      return Bill.fromJson(jsonDecode(response.body));
     }
+    throw Exception('Failed to create bill');
   }
 }
