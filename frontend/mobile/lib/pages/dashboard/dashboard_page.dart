@@ -29,8 +29,8 @@ class _DashboardPageState extends State<DashboardPage> {
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
     
-    // Hide standard app bar for HomeTab, HistoryTab, and ScanTab as they have their own headers
-    final bool showAppBar = _currentTab != 0 && _currentTab != 1 && _currentTab != 2;
+    // Hide standard app bar for HomeTab, HistoryTab, ScanTab, and MenuTab as they have their own headers
+    final bool showAppBar = _currentTab != 0 && _currentTab != 1 && _currentTab != 2 && _currentTab != 3;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF7F7F9),
@@ -77,7 +77,7 @@ class _DashboardPageState extends State<DashboardPage> {
               _onTabChanged(1); // fallback
             }
           }),
-          const MenuTab(),
+          MenuTab(onBack: () => _onTabChanged(0)),
           const SettingsTab(),
         ],
       ),
