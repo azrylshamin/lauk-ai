@@ -213,7 +213,6 @@ class _MenuTabState extends State<MenuTab> {
                                     await _menuService.updateMenuItem(item.id, {
                                       'name': name,
                                       'price': price,
-                                      if (yolo.isNotEmpty) 'yolo_class': yolo,
                                     });
                                   }
                                   _load();
