@@ -10,7 +10,7 @@ CREATE TABLE IF NOT EXISTS bills (
 CREATE TABLE IF NOT EXISTS bill_items (
     id            SERIAL PRIMARY KEY,
     bill_id       INTEGER NOT NULL REFERENCES bills(id) ON DELETE CASCADE,
-    menu_item_id  INTEGER REFERENCES menu_items(id),
+    menu_item_id  INTEGER REFERENCES menu_items(id) ON DELETE SET NULL,
     name          VARCHAR(100) NOT NULL,
     price         DECIMAL(10,2) NOT NULL DEFAULT 0.00,
     quantity      INTEGER NOT NULL DEFAULT 1,
