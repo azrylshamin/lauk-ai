@@ -1,446 +1,438 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+
+import '../../models/restaurant.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/restaurant_service.dart';
-import '../../services/employee_service.dart';
-import '../../services/auth_service.dart';
+import '../settings/employee_manager_page.dart';
+import '../settings/restaurant_profile_page.dart';
 
-class SettingsTab extends StatelessWidget {
+class SettingsTab extends StatefulWidget {
   const SettingsTab({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const SizedBox(height: 8),
-          Text('Restaurant Profile',
-              style:
-                  GoogleFonts.outfit(fontSize: 20, fontWeight: FontWeight.w700)),
-          const SizedBox(height: 12),
-          const _RestaurantProfile(),
-          const SizedBox(height: 32),
-          Text('Employees',
-              style:
-                  GoogleFonts.outfit(fontSize: 20, fontWeight: FontWeight.w700)),
-          const SizedBox(height: 12),
-          const _EmployeeManager(),
-          const SizedBox(height: 32),
-        ],
-      ),
-    );
-  }
+  State<SettingsTab> createState() => _SettingsTabState();
 }
 
-
-
-// ─── Restaurant Profile ──────────────────────────────────────────────────────
-
-class _RestaurantProfile extends StatefulWidget {
-  const _RestaurantProfile();
-
-  @override
-  State<_RestaurantProfile> createState() => _RestaurantProfileState();
-}
-
-class _RestaurantProfileState extends State<_RestaurantProfile> {
+class _SettingsTabState extends State<SettingsTab> {
   final _restaurantService = RestaurantService();
-  final _nameController = TextEditingController();
-  final _addressController = TextEditingController();
-  final _phoneController = TextEditingController();
-  bool _loading = true;
-  bool _saving = false;
-  String? _message;
+  Restaurant? _restaurant;
+  bool _loadingRest = true;
 
   @override
   void initState() {
     super.initState();
-    _load();
+    _loadRestaurant();
   }
 
-  Future<void> _load() async {
+  Future<void> _loadRestaurant() async {
     try {
       final r = await _restaurantService.getProfile();
-      _nameController.text = r.name;
-      _addressController.text = r.address;
-      _phoneController.text = r.phone;
-      if (mounted) setState(() => _loading = false);
+      if (mounted) {
+        setState(() {
+          _restaurant = r;
+          _loadingRest = false;
+        });
+      }
     } catch (_) {
-      if (mounted) setState(() => _loading = false);
+      if (mounted) setState(() => _loadingRest = false);
     }
   }
 
-  Future<void> _save() async {
-    final auth = context.read<AuthProvider>();
-    if (!auth.isOwner) return;
-
-    setState(() {
-      _saving = true;
-      _message = null;
-    });
-    try {
-      await _restaurantService.updateProfile({
-        'name': _nameController.text.trim(),
-        'address': _addressController.text.trim(),
-        'phone': _phoneController.text.trim(),
-      });
-      if (mounted) {
-        setState(() {
-          _saving = false;
-          _message = 'Profile updated!';
-        });
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() {
-          _saving = false;
-          _message = 'Failed to update';
-        });
-      }
-    }
-  }
-
-  @override
-  void dispose() {
-    _nameController.dispose();
-    _addressController.dispose();
-    _phoneController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final isOwner = context.watch<AuthProvider>().isOwner;
-
-    if (_loading) {
-      return const Center(child: CircularProgressIndicator());
-    }
-
+  Widget _buildSection({required String title, required List<Widget> children}) {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        TextField(
-          controller: _nameController,
-          decoration: const InputDecoration(labelText: 'Restaurant Name'),
-          enabled: isOwner,
-        ),
-        const SizedBox(height: 12),
-        TextField(
-          controller: _addressController,
-          decoration: const InputDecoration(labelText: 'Address'),
-          enabled: isOwner,
-        ),
-        const SizedBox(height: 12),
-        TextField(
-          controller: _phoneController,
-          decoration: const InputDecoration(labelText: 'Phone'),
-          enabled: isOwner,
-          keyboardType: TextInputType.phone,
-        ),
-        if (_message != null) ...[
-          const SizedBox(height: 8),
-          Text(_message!,
-              style: TextStyle(
-                  color: _message == 'Profile updated!'
-                      ? Colors.green
-                      : Colors.red)),
-        ],
-        if (isOwner) ...[
-          const SizedBox(height: 16),
-          ElevatedButton(
-            onPressed: _saving ? null : _save,
-            child: _saving
-                ? const SizedBox(
-                    height: 20,
-                    width: 20,
-                    child: CircularProgressIndicator(
-                        strokeWidth: 2, color: Colors.white),
-                  )
-                : const Text('Save Changes'),
+        Padding(
+          padding: const EdgeInsets.only(left: 4, bottom: 8),
+          child: Text(
+            title,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 1.2,
+              color: Colors.blueGrey[300],
+            ),
           ),
-        ],
-        if (!isOwner) ...[
-          const SizedBox(height: 8),
-          Text('Only the owner can edit the restaurant profile.',
-              style: TextStyle(color: Colors.grey[500], fontSize: 13)),
-        ],
+        ),
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.02),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Column(
+            children: children,
+          ),
+        ),
+        const SizedBox(height: 24),
       ],
     );
   }
-}
 
-// ─── Employee Manager ────────────────────────────────────────────────────────
-
-class _EmployeeManager extends StatefulWidget {
-  const _EmployeeManager();
-
-  @override
-  State<_EmployeeManager> createState() => _EmployeeManagerState();
-}
-
-class _EmployeeManagerState extends State<_EmployeeManager> {
-  final _employeeService = EmployeeService();
-  final _authService = AuthService();
-  List<Employee> _employees = [];
-  bool _loading = true;
-  bool _showInviteForm = false;
-  int? _deletingId;
-
-  final _inviteNameController = TextEditingController();
-  final _inviteEmailController = TextEditingController();
-  final _invitePasswordController = TextEditingController();
-
-  @override
-  void initState() {
-    super.initState();
-    _load();
-  }
-
-  Future<void> _load() async {
-    try {
-      final employees = await _employeeService.getEmployees();
-      if (mounted) {
-        setState(() {
-          _employees = employees;
-          _loading = false;
-        });
-      }
-    } catch (_) {
-      if (mounted) setState(() => _loading = false);
-    }
-  }
-
-  Future<void> _invite() async {
-    final name = _inviteNameController.text.trim();
-    final email = _inviteEmailController.text.trim();
-    final password = _invitePasswordController.text;
-    if (name.isEmpty || email.isEmpty || password.isEmpty) return;
-
-    try {
-      await _authService.invite(name, email, password);
-      _inviteNameController.clear();
-      _inviteEmailController.clear();
-      _invitePasswordController.clear();
-      setState(() => _showInviteForm = false);
-      _load();
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('$e')));
-      }
-    }
-  }
-
-  Future<void> _removeEmployee(int id) async {
-    try {
-      await _employeeService.deleteEmployee(id);
-      _load();
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('$e')));
-      }
-    }
-    setState(() => _deletingId = null);
-  }
-
-  @override
-  void dispose() {
-    _inviteNameController.dispose();
-    _inviteEmailController.dispose();
-    _invitePasswordController.dispose();
-    super.dispose();
+  Widget _buildTile({
+    required IconData icon,
+    required String title,
+    Widget? trailing,
+    VoidCallback? onTap,
+    bool showBorder = true,
+  }) {
+    return Column(
+      children: [
+        ListTile(
+          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+          leading: Icon(icon, color: const Color(0xFFFB8500)),
+          title: Text(
+            title,
+            style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
+          ),
+          trailing: trailing ?? const Icon(Icons.chevron_right, color: Colors.grey),
+          onTap: onTap,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        ),
+        if (showBorder)
+          Divider(height: 1, indent: 56, endIndent: 16, color: Colors.grey[100]),
+      ],
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    final isOwner = context.watch<AuthProvider>().isOwner;
+    final user = context.watch<AuthProvider>().user;
+    if (user == null) return const SizedBox.shrink();
 
-    if (!isOwner) {
-      return Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.grey[50],
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Text('Only restaurant owner can manage employees.',
-            style: TextStyle(color: Colors.grey[500])),
-      );
-    }
-
-    if (_loading) {
-      return const Center(child: CircularProgressIndicator());
-    }
-
-    return Column(
-      children: [
-        // Invite button / form
-        if (!_showInviteForm)
-          Align(
-            alignment: Alignment.centerRight,
-            child: TextButton.icon(
-              onPressed: () => setState(() => _showInviteForm = true),
-              icon: const Icon(Icons.person_add, size: 18),
-              label: const Text('Add Employee'),
-            ),
-          )
-        else
-          Container(
-            padding: const EdgeInsets.all(12),
-            margin: const EdgeInsets.only(bottom: 12),
-            decoration: BoxDecoration(
-              color: Colors.grey[50],
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.grey[200]!),
-            ),
-            child: Column(
-              children: [
-                TextField(
-                  controller: _inviteNameController,
-                  decoration: const InputDecoration(
-                    labelText: 'Full Name',
-                    isDense: true,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                TextField(
-                  controller: _inviteEmailController,
-                  decoration: const InputDecoration(
-                    labelText: 'Email',
-                    isDense: true,
-                  ),
-                  keyboardType: TextInputType.emailAddress,
-                ),
-                const SizedBox(height: 8),
-                TextField(
-                  controller: _invitePasswordController,
-                  decoration: const InputDecoration(
-                    labelText: 'Temporary Password',
-                    isDense: true,
-                  ),
-                  obscureText: true,
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    TextButton(
-                      onPressed: () =>
-                          setState(() => _showInviteForm = false),
-                      child: const Text('Cancel'),
-                    ),
-                    const SizedBox(width: 8),
-                    ElevatedButton(
-                      onPressed: _invite,
-                      child: const Text('Invite'),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-
-        // Employee list
-        ..._employees.map((emp) {
-          if (_deletingId == emp.id) {
-            return Container(
-              margin: const EdgeInsets.only(bottom: 8),
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-              decoration: BoxDecoration(
-                color: Colors.red[50],
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.red[200]!),
-              ),
-              child: Row(
+    return Scaffold(
+      backgroundColor: const Color(0xFFFAFAFA),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // --- App Bar ---
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Expanded(
-                    child: Text('Remove "${emp.name}"?',
-                        style: TextStyle(color: Colors.red[700])),
+                  Text(
+                    'Settings',
+                    style: GoogleFonts.outfit(
+                      fontSize: 22,
+                      fontWeight: FontWeight.w800,
+                      color: const Color(0xFF12121D),
+                    ),
                   ),
-                  IconButton(
-                    icon: Icon(Icons.check, color: Colors.red[600]),
-                    onPressed: () => _removeEmployee(emp.id),
-                    constraints: const BoxConstraints(),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.close),
-                    onPressed: () => setState(() => _deletingId = null),
-                    constraints: const BoxConstraints(),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFB8500).withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: const Text('LaukAI Pro',
+                        style: TextStyle(
+                            color: Color(0xFFFB8500),
+                            fontWeight: FontWeight.bold,
+                            fontSize: 13)),
                   ),
                 ],
               ),
-            );
-          }
+              const SizedBox(height: 32),
 
-          return Container(
-            margin: const EdgeInsets.only(bottom: 8),
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.grey[200]!),
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Text(emp.name,
-                              style: const TextStyle(
-                                  fontWeight: FontWeight.w600)),
-                          const SizedBox(width: 8),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 8, vertical: 2),
-                            decoration: BoxDecoration(
-                              color: emp.isOwner
-                                  ? const Color(0xFFfb8500).withValues(alpha: 0.15)
-                                  : Colors.grey[100],
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Text(emp.role,
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w600,
-                                  color: emp.isOwner
-                                      ? const Color(0xFFfb8500)
-                                      : Colors.grey[600],
-                                )),
-                          ),
-                        ],
+              // --- Profile Header ---
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFB8500).withValues(alpha: 0.15),
+                      shape: BoxShape.circle,
+                    ),
+                    child: CircleAvatar(
+                      radius: 36,
+                      backgroundColor: Colors.white,
+                      foregroundColor: const Color(0xFFFB8500),
+                      child: Text(
+                        user.name.isNotEmpty ? user.name[0].toUpperCase() : 'U',
+                        style: const TextStyle(
+                            fontSize: 28, fontWeight: FontWeight.bold),
                       ),
-                      const SizedBox(height: 2),
-                      Text(emp.email,
-                          style: TextStyle(
-                              fontSize: 13, color: Colors.grey[500])),
-                    ],
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          user.name,
+                          style: const TextStyle(
+                              fontSize: 20, fontWeight: FontWeight.bold),
+                        ),
+                        Text(
+                          user.email,
+                          style: TextStyle(color: Colors.grey[600], fontSize: 14),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 32),
+
+              // --- Restaurant Card ---
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(24),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.03),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Expanded(
+                          child: Text(
+                            _loadingRest ? 'Loading...' : (_restaurant?.name ?? 'No Restaurant Name'),
+                            style: const TextStyle(
+                                fontSize: 18, fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                        InkWell(
+                          onTap: () async {
+                            await Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const RestaurantProfilePage(),
+                              ),
+                            );
+                            _loadRestaurant(); // Refresh when back
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFFB8500).withValues(alpha: 0.1),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(Icons.edit,
+                                size: 18, color: Color(0xFFFB8500)),
+                          ),
+                        )
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      _restaurant?.address ?? '-',
+                      style: TextStyle(color: Colors.grey[600], fontSize: 14),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      _restaurant?.phone ?? '-',
+                      style: TextStyle(color: Colors.grey[600], fontSize: 14),
+                    ),
+                    const SizedBox(height: 16),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(16),
+                      child: Image.asset(
+                        'assets/images/restaurant_placeholder.jpg',
+                        height: 120,
+                        width: double.infinity,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, _, __) => Container(
+                          height: 120,
+                          width: double.infinity,
+                          color: Colors.grey[200],
+                          child: Icon(Icons.restaurant,
+                              color: Colors.grey[400], size: 48),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 32),
+
+              // --- Settings Sections ---
+              _buildSection(
+                title: 'ACCOUNT SETTINGS',
+                children: [
+                  _buildTile(
+                    icon: Icons.person_outline,
+                    title: 'Edit Profile',
+                    onTap: () {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Edit Profile not implemented yet.')),
+                      );
+                    },
+                    showBorder: true,
+                  ),
+                  _buildTile(
+                    icon: Icons.lock_outline,
+                    title: 'Change Password',
+                    onTap: () {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Change Password not implemented yet.')),
+                      );
+                    },
+                    showBorder: false,
+                  ),
+                ],
+              ),
+
+              _buildSection(
+                title: 'RESTAURANT MANAGEMENT',
+                children: [
+                  _buildTile(
+                    icon: Icons.restaurant_menu,
+                    title: 'Menu Settings',
+                    onTap: () {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Please use the Menu tab or specific item options.')),
+                      );
+                    },
+                    showBorder: true,
+                  ),
+                  _buildTile(
+                    icon: Icons.access_time,
+                    title: 'Business Hours',
+                    onTap: () {
+                       ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Business Hours not implemented yet.')),
+                      );
+                    },
+                    showBorder: true,
+                  ),
+                  _buildTile(
+                    icon: Icons.group_outlined,
+                    title: 'Employee Management',
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const EmployeeManagerPage(),
+                        ),
+                      );
+                    },
+                    showBorder: false,
+                  ),
+                ],
+              ),
+
+              _buildSection(
+                title: 'APP PREFERENCES',
+                children: [
+                  _buildTile(
+                    icon: Icons.notifications_none,
+                    title: 'Notifications',
+                    onTap: () {},
+                    showBorder: true,
+                  ),
+                  _buildTile(
+                    icon: Icons.dark_mode_outlined,
+                    title: 'Dark Mode (Coming Soon)',
+                    trailing: IgnorePointer(
+                      child: Switch(
+                        value: false,
+                        onChanged: (val) {},
+                        activeTrackColor: const Color(0xFFFB8500),
+                      ),
+                    ),
+                    onTap: () {},
+                    showBorder: true,
+                  ),
+                  _buildTile(
+                    icon: Icons.language,
+                    title: 'Language',
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text('English',
+                            style: TextStyle(color: Colors.blueGrey[300])),
+                        const SizedBox(width: 4),
+                        const Icon(Icons.chevron_right, color: Colors.grey),
+                      ],
+                    ),
+                    onTap: () {},
+                    showBorder: false,
+                  ),
+                ],
+              ),
+
+              _buildSection(
+                title: 'SUPPORT',
+                children: [
+                  _buildTile(
+                    icon: Icons.help_outline,
+                    title: 'Help Center',
+                    onTap: () {},
+                    showBorder: true,
+                  ),
+                  _buildTile(
+                    icon: Icons.support_agent,
+                    title: 'Contact Support',
+                    onTap: () {},
+                    showBorder: true,
+                  ),
+                  _buildTile(
+                    icon: Icons.privacy_tip_outlined,
+                    title: 'Privacy Policy',
+                    onTap: () {},
+                    showBorder: false,
+                  ),
+                ],
+              ),
+
+              // --- Logout Button ---
+              Container(
+                width: double.infinity,
+                margin: const EdgeInsets.only(top: 8, bottom: 24),
+                child: OutlinedButton.icon(
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    side: BorderSide(color: Colors.red[100]!, width: 1.5),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    backgroundColor: Colors.red[50],
+                    foregroundColor: Colors.red[600],
+                  ),
+                  onPressed: () {
+                    context.read<AuthProvider>().logout();
+                  },
+                  icon: const Icon(Icons.logout),
+                  label: const Text(
+                    'Logout',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                   ),
                 ),
-                if (!emp.isOwner)
-                  IconButton(
-                    icon: Icon(Icons.delete, size: 18, color: Colors.red[400]),
-                    onPressed: () => setState(() => _deletingId = emp.id),
-                    constraints: const BoxConstraints(),
-                    padding: const EdgeInsets.all(4),
-                  ),
-              ],
-            ),
-          );
-        }),
+              ),
 
-        if (_employees.isEmpty)
-          Padding(
-            padding: const EdgeInsets.all(20),
-            child: Text('No employees yet',
-                style: TextStyle(color: Colors.grey[500])),
+              // --- Version String ---
+              Center(
+                child: Text(
+                  'LaukAI v2.4.0 (Build 2024.11)',
+                  style: TextStyle(color: Colors.grey[400], fontSize: 12),
+                ),
+              ),
+              const SizedBox(height: 32),
+            ],
           ),
-      ],
+        ),
+      ),
     );
   }
 }
