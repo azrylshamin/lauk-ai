@@ -51,7 +51,7 @@ class _HomeTabState extends State<HomeTab> {
       color: const Color(0xFFfb8500),
       child: SingleChildScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        padding: const EdgeInsets.fromLTRB(20, 40, 20, 16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -320,9 +320,7 @@ class _HomeTabState extends State<HomeTab> {
   }
 
   Widget _buildTransactionCard(Bill bill) {
-    // Generate a pseudo-random dummy identifier since we don't have table numbers in the schema yet
-    final identifier = (bill.id % 2 == 0) ? 'Takeaway #${1000 + bill.id}' : 'Table ${bill.id % 20 + 1}';
-    final isTakeaway = bill.id % 2 == 0;
+    final identifier = 'Order #${bill.id}';
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -347,7 +345,7 @@ class _HomeTabState extends State<HomeTab> {
               shape: BoxShape.circle,
             ),
             child: Icon(
-              isTakeaway ? Icons.shopping_bag : Icons.person,
+              Icons.receipt_long,
               color: Colors.blueGrey[700],
               size: 20,
             ),

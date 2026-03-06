@@ -18,8 +18,10 @@ class _CustomerPageState extends State<CustomerPage> {
   final _customerService = CustomerService();
   List<Restaurant> _restaurants = [];
   Restaurant? _selectedRestaurant;
-  File? _image;
-  DetectionResult? _result;
+  List<File> _images = [];
+  int _activeImageIndex = 0;
+  List<DetectionItem> _accumulatedItems = [];
+  bool _hasResults = false;
   bool _loading = false;
   bool _loadingRestaurants = true;
   String? _error;
@@ -50,27 +52,35 @@ class _CustomerPageState extends State<CustomerPage> {
     final picker = ImagePicker();
     final picked = await picker.pickImage(source: ImageSource.gallery);
     if (picked != null) {
+      final file = File(picked.path);
       setState(() {
-        _image = File(picked.path);
-        _result = null;
+        _images.add(file);
+        _activeImageIndex = _images.length - 1;
         _error = null;
       });
+      // If we already have results, auto-estimate the new image
+      if (_hasResults) {
+        _estimateSingleImage(file);
+      }
     }
   }
 
   Future<void> _estimatePrice() async {
-    if (_image == null || _selectedRestaurant == null) return;
+    if (_images.isEmpty || _selectedRestaurant == null) return;
     setState(() {
       _loading = true;
       _error = null;
     });
     try {
-      final result = await _customerService.estimatePrice(
-        _selectedRestaurant!.id,
-        _image!.path,
-      );
+      for (final image in _images) {
+        final result = await _customerService.estimatePrice(
+          _selectedRestaurant!.id,
+          image.path,
+        );
+        _mergeItems(result.items);
+      }
       setState(() {
-        _result = result;
+        _hasResults = true;
         _loading = false;
       });
     } catch (e) {
@@ -81,10 +91,51 @@ class _CustomerPageState extends State<CustomerPage> {
     }
   }
 
+  Future<void> _estimateSingleImage(File image) async {
+    if (_selectedRestaurant == null) return;
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+    try {
+      final result = await _customerService.estimatePrice(
+        _selectedRestaurant!.id,
+        image.path,
+      );
+      setState(() {
+        _mergeItems(result.items);
+        _loading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _error = 'Failed to estimate price. Please try again.';
+        _loading = false;
+      });
+    }
+  }
+
+  void _mergeItems(List<DetectionItem> newItems) {
+    for (final newItem in newItems) {
+      final existingIndex = _accumulatedItems.indexWhere(
+        (i) => i.menuItemId != null && i.menuItemId == newItem.menuItemId,
+      );
+      if (existingIndex >= 0) {
+        _accumulatedItems[existingIndex].quantity += newItem.quantity;
+      } else {
+        _accumulatedItems.add(newItem);
+      }
+    }
+  }
+
+  double get _estimatedTotal =>
+      _accumulatedItems.fold(0.0, (sum, i) => sum + i.subtotal);
+
   void _reset() {
     setState(() {
-      _image = null;
-      _result = null;
+      _images = [];
+      _activeImageIndex = 0;
+      _accumulatedItems = [];
+      _hasResults = false;
       _error = null;
     });
   }
@@ -92,8 +143,10 @@ class _CustomerPageState extends State<CustomerPage> {
   void _goBack() {
     setState(() {
       _selectedRestaurant = null;
-      _image = null;
-      _result = null;
+      _images = [];
+      _activeImageIndex = 0;
+      _accumulatedItems = [];
+      _hasResults = false;
       _error = null;
     });
   }
@@ -106,7 +159,7 @@ class _CustomerPageState extends State<CustomerPage> {
         title: Text(
           _selectedRestaurant == null
               ? 'LaukAI'
-              : _result != null
+              : _hasResults
                   ? 'Scan Results'
                   : 'Quick Scan',
           style: GoogleFonts.outfit(
@@ -278,48 +331,8 @@ class _CustomerPageState extends State<CustomerPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                if (_result == null) ...[
-                  GestureDetector(
-                    onTap: _pickImage,
-                    child: DottedBorder(
-                      options: RoundedRectDottedBorderOptions(
-                        color: Colors.grey[400]!,
-                        strokeWidth: 2,
-                        dashPattern: const [8, 6],
-                        radius: const Radius.circular(24),
-                      ),
-                      child: Container(
-                        height: 280,
-                        width: double.infinity,
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(24),
-                        ),
-                        child: _image != null
-                            ? ClipRRect(
-                                borderRadius: BorderRadius.circular(24),
-                                child: Image.file(_image!, fit: BoxFit.cover, width: double.infinity),
-                              )
-                            : Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Container(
-                                    padding: const EdgeInsets.all(20),
-                                    decoration: const BoxDecoration(
-                                      color: Color(0xFFFFF3E0),
-                                      shape: BoxShape.circle,
-                                    ),
-                                    child: const Icon(Icons.camera_alt, color: Color(0xFFfb8500), size: 36),
-                                  ),
-                                  const SizedBox(height: 20),
-                                  Text('Tap to upload', style: GoogleFonts.outfit(fontWeight: FontWeight.w800, fontSize: 20, color: const Color(0xFF12121D))),
-                                  const SizedBox(height: 6),
-                                  Text('food tray', style: GoogleFonts.inter(color: Colors.grey[500], fontSize: 16)),
-                                ],
-                              ),
-                      ),
-                    ),
-                  ),
+                if (!_hasResults) ...[
+                  _buildPreScanImageSection(),
                   const SizedBox(height: 32),
                   Container(
                     padding: const EdgeInsets.all(16),
@@ -387,57 +400,15 @@ class _CustomerPageState extends State<CustomerPage> {
                     ],
                   ),
                 ] else ...[
-                  Stack(
-                    children: [
-                      Container(
-                        height: 280,
-                        width: double.infinity,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(24),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.1),
-                              blurRadius: 15,
-                              offset: const Offset(0, 5),
-                            ),
-                          ],
-                        ),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(24),
-                          child: _image != null
-                              ? Image.file(_image!, fit: BoxFit.cover)
-                              : Container(color: Colors.grey[300]),
-                        ),
-                      ),
-                      Positioned(
-                        top: 16,
-                        left: 16,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFfb8500),
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const Icon(Icons.check_circle, color: Colors.white, size: 14),
-                              const SizedBox(width: 6),
-                              Text('ANALYSIS COMPLETE', style: GoogleFonts.inter(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w800, letterSpacing: 0.5)),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
+                  _buildResultsImageSection(),
                   const SizedBox(height: 32),
                   Text('Detected Items', style: GoogleFonts.outfit(fontSize: 20, fontWeight: FontWeight.w800, color: const Color(0xFF12121D))),
                   Text(
-                    'We\'ve identified ${_result!.items.length} item${_result!.items.length != 1 ? 's' : ''} on your tray',
+                    'We\'ve identified ${_accumulatedItems.length} item${_accumulatedItems.length != 1 ? 's' : ''} on your tray',
                     style: GoogleFonts.inter(color: Colors.grey[500], fontSize: 14),
                   ),
                   const SizedBox(height: 16),
-                  ..._result!.items.map((item) {
+                  ..._accumulatedItems.map((item) {
                     return Container(
                       margin: const EdgeInsets.only(bottom: 12),
                       padding: const EdgeInsets.all(12),
@@ -484,7 +455,9 @@ class _CustomerPageState extends State<CustomerPage> {
                                     ),
                                     const SizedBox(width: 6),
                                     Text(
-                                      '${(item.confidence * 100).toStringAsFixed(0)}% confidence',
+                                      item.quantity > 1
+                                          ? '${(item.confidence * 100).toStringAsFixed(0)}% confidence  x${item.quantity}'
+                                          : '${(item.confidence * 100).toStringAsFixed(0)}% confidence',
                                       style: GoogleFonts.inter(color: Colors.grey[500], fontSize: 12, fontWeight: FontWeight.w500),
                                     ),
                                   ],
@@ -493,7 +466,7 @@ class _CustomerPageState extends State<CustomerPage> {
                             ),
                           ),
                           Text(
-                            item.price != null ? 'RM ${item.price!.toStringAsFixed(2)}' : '-',
+                            item.price != null ? 'RM ${item.subtotal.toStringAsFixed(2)}' : '-',
                             style: GoogleFonts.inter(fontWeight: FontWeight.w800, fontSize: 16, color: const Color(0xFF12121D)),
                           ),
                         ],
@@ -536,102 +509,381 @@ class _CustomerPageState extends State<CustomerPage> {
             ),
           ),
         ),
-        Container(
-          padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
-          decoration: const BoxDecoration(
-            color: Color(0xFFF7F7F9),
-            border: Border(top: BorderSide(color: Color(0xFFEAEAEF))),
+        _buildBottomBar(),
+      ],
+    );
+  }
+
+  Widget _buildPreScanImageSection() {
+    if (_images.isEmpty) {
+      return GestureDetector(
+        onTap: _pickImage,
+        child: DottedBorder(
+          options: RoundedRectDottedBorderOptions(
+            color: Colors.grey[400]!,
+            strokeWidth: 2,
+            dashPattern: const [8, 6],
+            radius: const Radius.circular(24),
           ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (_result != null) ...[
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('TOTAL PAYABLE', style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w800, color: const Color(0xFF6E6E82), letterSpacing: 1)),
-                        const SizedBox(height: 4),
-                        Text('RM ${_result!.total.toStringAsFixed(2)}', style: GoogleFonts.outfit(fontSize: 28, fontWeight: FontWeight.w800, color: const Color(0xFFfb8500))),
-                      ],
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 6),
-                      child: Text('Includes 0% SST', style: GoogleFonts.inter(fontSize: 11, color: const Color(0xFF9EA3AE), fontWeight: FontWeight.w500)),
-                    ),
-                  ],
+          child: Container(
+            height: 280,
+            width: double.infinity,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(24),
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: const BoxDecoration(
+                    color: Color(0xFFFFF3E0),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.camera_alt, color: Color(0xFFfb8500), size: 36),
                 ),
                 const SizedBox(height: 20),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: _reset,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFfb8500),
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 18),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-                      elevation: 0,
+                Text('Tap to upload', style: GoogleFonts.outfit(fontWeight: FontWeight.w800, fontSize: 20, color: const Color(0xFF12121D))),
+                const SizedBox(height: 6),
+                Text('food tray', style: GoogleFonts.inter(color: Colors.grey[500], fontSize: 16)),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        // Main preview
+        Container(
+          height: 240,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(24),
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              Image.file(_images[_activeImageIndex], fit: BoxFit.cover),
+              if (_loading)
+                Container(
+                  color: Colors.black.withOpacity(0.4),
+                  child: const Center(
+                    child: CircularProgressIndicator(color: Color(0xFFfb8500)),
+                  ),
+                ),
+              // Image counter badge
+              if (_images.length > 1)
+                Positioned(
+                  top: 12,
+                  right: 12,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withOpacity(0.6),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      '${_activeImageIndex + 1} / ${_images.length}',
+                      style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w700, color: Colors.white),
+                    ),
+                  ),
+                ),
+              // Add another image button
+              Positioned(
+                bottom: 12,
+                left: 12,
+                child: GestureDetector(
+                  onTap: _pickImage,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.9),
+                      borderRadius: BorderRadius.circular(20),
                     ),
                     child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
+                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(Icons.camera_alt, size: 22),
-                        const SizedBox(width: 8),
-                        Text('Scan Another Tray', style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.w700)),
+                        const Icon(Icons.add_a_photo, size: 16, color: Color(0xFF14142B)),
+                        const SizedBox(width: 6),
+                        Text(
+                          'Add Another Photo',
+                          style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF14142B)),
+                        ),
                       ],
                     ),
                   ),
                 ),
-              ] else ...[
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: _image != null && !_loading ? _estimatePrice : null,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFfb8500),
-                      foregroundColor: Colors.white,
-                      disabledBackgroundColor: const Color(0xFFfb8500).withOpacity(0.5),
-                      padding: const EdgeInsets.symmetric(vertical: 18),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(24),
-                      ),
-                      elevation: 0,
-                    ),
-                    child: _loading
-                        ? const SizedBox(
-                            height: 24,
-                            width: 24,
-                            child: CircularProgressIndicator(strokeWidth: 3, color: Colors.white),
-                          )
-                        : Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text('Estimate Price', style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.w700)),
-                              const SizedBox(width: 8),
-                              const Icon(Icons.calculate, size: 22),
-                            ],
-                          ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  'POWERED BY LAUKAI VISION',
-                  style: GoogleFonts.inter(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                    color: const Color(0xFF9EA3AE),
-                    letterSpacing: 1.2,
-                  ),
-                ),
-              ]
+              ),
             ],
           ),
         ),
+        // Thumbnail gallery
+        if (_images.length > 1) ...[
+          const SizedBox(height: 12),
+          SizedBox(
+            height: 64,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              itemCount: _images.length,
+              separatorBuilder: (_, __) => const SizedBox(width: 8),
+              itemBuilder: (context, index) {
+                final isActive = index == _activeImageIndex;
+                return GestureDetector(
+                  onTap: () => setState(() => _activeImageIndex = index),
+                  child: Container(
+                    width: 64,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: isActive ? const Color(0xFFfb8500) : const Color(0xFFE5E5EA),
+                        width: isActive ? 2.5 : 1.5,
+                      ),
+                    ),
+                    clipBehavior: Clip.antiAlias,
+                    child: Image.file(_images[index], fit: BoxFit.cover),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
       ],
+    );
+  }
+
+  Widget _buildResultsImageSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Stack(
+          children: [
+            Container(
+              height: 240,
+              width: double.infinity,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(24),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: 15,
+                    offset: const Offset(0, 5),
+                  ),
+                ],
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(24),
+                child: Image.file(_images[_activeImageIndex], fit: BoxFit.cover),
+              ),
+            ),
+            if (_loading)
+              Positioned.fill(
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.black.withOpacity(0.4),
+                    borderRadius: BorderRadius.circular(24),
+                  ),
+                  child: const Center(
+                    child: CircularProgressIndicator(color: Color(0xFFfb8500)),
+                  ),
+                ),
+              ),
+            Positioned(
+              top: 16,
+              left: 16,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFfb8500),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.check_circle, color: Colors.white, size: 14),
+                    const SizedBox(width: 6),
+                    Text('ANALYSIS COMPLETE', style: GoogleFonts.inter(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w800, letterSpacing: 0.5)),
+                  ],
+                ),
+              ),
+            ),
+            // Image counter badge
+            if (_images.length > 1)
+              Positioned(
+                top: 16,
+                right: 16,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withOpacity(0.6),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    '${_activeImageIndex + 1} / ${_images.length}',
+                    style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w700, color: Colors.white),
+                  ),
+                ),
+              ),
+            // Scan another image button
+            Positioned(
+              bottom: 12,
+              left: 12,
+              child: GestureDetector(
+                onTap: _loading ? null : _pickImage,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.9),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.add_a_photo, size: 16, color: Color(0xFF14142B)),
+                      const SizedBox(width: 6),
+                      Text(
+                        'Scan Another',
+                        style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF14142B)),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+        // Thumbnail gallery
+        if (_images.length > 1) ...[
+          const SizedBox(height: 12),
+          SizedBox(
+            height: 64,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              itemCount: _images.length,
+              separatorBuilder: (_, __) => const SizedBox(width: 8),
+              itemBuilder: (context, index) {
+                final isActive = index == _activeImageIndex;
+                return GestureDetector(
+                  onTap: () => setState(() => _activeImageIndex = index),
+                  child: Container(
+                    width: 64,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: isActive ? const Color(0xFFfb8500) : const Color(0xFFE5E5EA),
+                        width: isActive ? 2.5 : 1.5,
+                      ),
+                    ),
+                    clipBehavior: Clip.antiAlias,
+                    child: Image.file(_images[index], fit: BoxFit.cover),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildBottomBar() {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
+      decoration: const BoxDecoration(
+        color: Color(0xFFF7F7F9),
+        border: Border(top: BorderSide(color: Color(0xFFEAEAEF))),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (_hasResults) ...[
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('TOTAL PAYABLE', style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w800, color: const Color(0xFF6E6E82), letterSpacing: 1)),
+                    const SizedBox(height: 4),
+                    Text('RM ${_estimatedTotal.toStringAsFixed(2)}', style: GoogleFonts.outfit(fontSize: 28, fontWeight: FontWeight.w800, color: const Color(0xFFfb8500))),
+                  ],
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 6),
+                  child: Text('Includes 0% SST', style: GoogleFonts.inter(fontSize: 11, color: const Color(0xFF9EA3AE), fontWeight: FontWeight.w500)),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: _reset,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFFfb8500),
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 18),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+                  elevation: 0,
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.camera_alt, size: 22),
+                    const SizedBox(width: 8),
+                    Text('Start New Scan', style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.w700)),
+                  ],
+                ),
+              ),
+            ),
+          ] else ...[
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: _images.isNotEmpty && !_loading ? _estimatePrice : null,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFFfb8500),
+                  foregroundColor: Colors.white,
+                  disabledBackgroundColor: const Color(0xFFfb8500).withOpacity(0.5),
+                  padding: const EdgeInsets.symmetric(vertical: 18),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(24),
+                  ),
+                  elevation: 0,
+                ),
+                child: _loading
+                    ? const SizedBox(
+                        height: 24,
+                        width: 24,
+                        child: CircularProgressIndicator(strokeWidth: 3, color: Colors.white),
+                      )
+                    : Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text('Estimate Price', style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.w700)),
+                          const SizedBox(width: 8),
+                          const Icon(Icons.calculate, size: 22),
+                        ],
+                      ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'POWERED BY LAUKAI VISION',
+              style: GoogleFonts.inter(
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+                color: const Color(0xFF9EA3AE),
+                letterSpacing: 1.2,
+              ),
+            ),
+          ]
+        ],
+      ),
     );
   }
 }

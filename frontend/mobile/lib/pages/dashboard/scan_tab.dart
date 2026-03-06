@@ -21,7 +21,8 @@ class _ScanTabState extends State<ScanTab> {
   final _predictService = PredictService();
   final _menuService = MenuService();
 
-  File? _image;
+  List<File> _images = [];
+  int _activeImageIndex = 0;
   List<DetectionItem> _items = [];
   bool _detecting = false;
   String? _error;
@@ -36,28 +37,38 @@ class _ScanTabState extends State<ScanTab> {
       imageQuality: 70,
     );
     if (picked != null) {
+      final file = File(picked.path);
       setState(() {
-        _image = File(picked.path);
-        _items = [];
+        _images.add(file);
+        _activeImageIndex = _images.length - 1;
         _error = null;
         _success = false;
         _detecting = false;
       });
-      // Auto detect
-      _detectFood();
+      // Auto detect the newly added image
+      _detectFood(file);
     }
   }
 
-  Future<void> _detectFood() async {
-    if (_image == null) return;
+  Future<void> _detectFood(File image) async {
     setState(() {
       _detecting = true;
       _error = null;
     });
     try {
-      final result = await _predictService.detectFood(_image!.path);
+      final result = await _predictService.detectFood(image.path);
       setState(() {
-        _items = result.items;
+        // Merge new detections into existing items
+        for (final newItem in result.items) {
+          final existingIndex = _items.indexWhere(
+            (i) => i.menuItemId != null && i.menuItemId == newItem.menuItemId,
+          );
+          if (existingIndex >= 0) {
+            _items[existingIndex].quantity += newItem.quantity;
+          } else {
+            _items.add(newItem);
+          }
+        }
         _detecting = false;
       });
     } catch (e) {
@@ -144,7 +155,8 @@ class _ScanTabState extends State<ScanTab> {
     if (result != null && result is String) {
       if (mounted) {
         setState(() {
-          _image = null;
+          _images = [];
+          _activeImageIndex = 0;
           _items = [];
           _success = false;
         });
@@ -256,69 +268,136 @@ class _ScanTabState extends State<ScanTab> {
   }
 
   Widget _buildImageSection() {
-    return GestureDetector(
-      onTap: _image == null ? _pickImage : null,
-      child: Container(
-        height: 240,
-        decoration: BoxDecoration(
-          color: const Color(0xFF14142B),
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: Colors.grey[300]!),
+    if (_images.isEmpty) {
+      return GestureDetector(
+        onTap: _pickImage,
+        child: Container(
+          height: 240,
+          decoration: BoxDecoration(
+            color: const Color(0xFF14142B),
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(color: Colors.grey[300]!),
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.camera_alt, size: 48, color: Colors.grey[700]),
+              const SizedBox(height: 12),
+              Text('Tap to take a photo',
+                  style: GoogleFonts.inter(color: Colors.grey[400], fontWeight: FontWeight.w500)),
+            ],
+          ),
         ),
-        clipBehavior: Clip.antiAlias,
-        child: _image != null
-            ? Stack(
-                fit: StackFit.expand,
-                children: [
-                  Image.file(_image!, fit: BoxFit.cover),
-                  if (_detecting)
-                    Container(
-                      color: Colors.black.withOpacity(0.4),
-                      child: const Center(
-                        child: CircularProgressIndicator(color: Color(0xFFfb8500)),
-                      ),
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        // Main preview of selected image
+        Container(
+          height: 200,
+          decoration: BoxDecoration(
+            color: const Color(0xFF14142B),
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(color: Colors.grey[300]!),
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              Image.file(_images[_activeImageIndex], fit: BoxFit.cover),
+              if (_detecting)
+                Container(
+                  color: Colors.black.withOpacity(0.4),
+                  child: const Center(
+                    child: CircularProgressIndicator(color: Color(0xFFfb8500)),
+                  ),
+                ),
+              // Image counter badge
+              Positioned(
+                top: 12,
+                right: 12,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withOpacity(0.6),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    '${_activeImageIndex + 1} / ${_images.length}',
+                    style: GoogleFonts.inter(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white,
                     ),
-                  Positioned(
-                    bottom: 16,
-                    left: 16,
-                    child: GestureDetector(
-                      onTap: _pickImage,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.9),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(Icons.refresh, size: 18, color: Color(0xFF14142B)),
-                            const SizedBox(width: 8),
-                            Text(
-                              'Retake Photo',
-                              style: GoogleFonts.inter(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w600,
-                                color: const Color(0xFF14142B),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  )
-                ],
-              )
-            : Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.camera_alt, size: 48, color: Colors.grey[700]),
-                  const SizedBox(height: 12),
-                  Text('Tap to take a photo',
-                      style: GoogleFonts.inter(color: Colors.grey[400], fontWeight: FontWeight.w500)),
-                ],
+                  ),
+                ),
               ),
-      ),
+              // Scan Another button
+              Positioned(
+                bottom: 12,
+                left: 12,
+                child: GestureDetector(
+                  onTap: _detecting ? null : _pickImage,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.9),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.add_a_photo, size: 16, color: Color(0xFF14142B)),
+                        const SizedBox(width: 6),
+                        Text(
+                          'Scan Another',
+                          style: GoogleFonts.inter(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: const Color(0xFF14142B),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        // Thumbnail gallery row
+        if (_images.length > 1) ...[
+          const SizedBox(height: 12),
+          SizedBox(
+            height: 64,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              itemCount: _images.length,
+              separatorBuilder: (_, __) => const SizedBox(width: 8),
+              itemBuilder: (context, index) {
+                final isActive = index == _activeImageIndex;
+                return GestureDetector(
+                  onTap: () => setState(() => _activeImageIndex = index),
+                  child: Container(
+                    width: 64,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: isActive ? const Color(0xFFfb8500) : const Color(0xFFE5E5EA),
+                        width: isActive ? 2.5 : 1.5,
+                      ),
+                    ),
+                    clipBehavior: Clip.antiAlias,
+                    child: Image.file(_images[index], fit: BoxFit.cover),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      ],
     );
   }
 

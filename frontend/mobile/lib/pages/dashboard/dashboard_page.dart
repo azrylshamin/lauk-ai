@@ -33,6 +33,7 @@ class _DashboardPageState extends State<DashboardPage> {
     final bool showAppBar = _currentTab != 0 && _currentTab != 1 && _currentTab != 2 && _currentTab != 3;
 
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       backgroundColor: const Color(0xFFF7F7F9),
       appBar: showAppBar ? AppBar(
         title: Text('LaukAI', style: GoogleFonts.outfit(fontWeight: FontWeight.w800, color: const Color(0xFF12121D))),
