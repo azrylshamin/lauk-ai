@@ -29,13 +29,14 @@ class _DashboardPageState extends State<DashboardPage> {
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
     
-    // Hide standard app bar for HomeTab, HistoryTab, ScanTab, and MenuTab as they have their own headers
-    final bool showAppBar = _currentTab != 0 && _currentTab != 1 && _currentTab != 2 && _currentTab != 3;
+    // Hide standard app bar for HomeTab, HistoryTab, ScanTab, MenuTab and SettingsTab as they have their own headers
+    final bool showAppBar = _currentTab != 0 && _currentTab != 1 && _currentTab != 2 && _currentTab != 3 && _currentTab != 4;
 
     return Scaffold(
       resizeToAvoidBottomInset: false,
       backgroundColor: const Color(0xFFF7F7F9),
       appBar: showAppBar ? AppBar(
+        automaticallyImplyLeading: false,
         title: Text('LaukAI', style: GoogleFonts.outfit(fontWeight: FontWeight.w800, color: const Color(0xFF12121D))),
         centerTitle: false,
         backgroundColor: Colors.transparent,
@@ -56,7 +57,7 @@ class _DashboardPageState extends State<DashboardPage> {
             onPressed: () async {
               await auth.logout();
               if (context.mounted) {
-                Navigator.pushReplacementNamed(context, '/login');
+                Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
               }
             },
             tooltip: 'Sign Out',
@@ -67,7 +68,7 @@ class _DashboardPageState extends State<DashboardPage> {
         index: _currentTab,
         children: [
           HomeTab(onNavigateToHistory: () => _onTabChanged(1)),
-          const HistoryTab(),
+          HistoryTab(onBack: () => _onTabChanged(0)),
           ScanTab(onBillCreated: (String action) {
             // After successful scan & bill creation, go to history or home
             if (action == 'HOME') {
@@ -83,6 +84,7 @@ class _DashboardPageState extends State<DashboardPage> {
         ],
       ),
       floatingActionButton: Container(
+        margin: const EdgeInsets.only(top: 48), // Increased top margin to push it further downwards
         padding: const EdgeInsets.all(4),
         decoration: BoxDecoration(
           color: Colors.white,
@@ -109,14 +111,14 @@ class _DashboardPageState extends State<DashboardPage> {
         elevation: 10,
         shadowColor: Colors.black.withOpacity(0.1),
         shape: const CircularNotchedRectangle(),
-        notchMargin: 8,
-        height: 70,
+        notchMargin: 6,
+        height: 75,
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
             _buildNavItem(Icons.home_filled, 'HOME', 0),
             _buildNavItem(Icons.receipt_long, 'HISTORY', 1),
-            const SizedBox(width: 48), // Space for FAB
+            const SizedBox(width: 56), // Space for larger FAB
             _buildNavItem(Icons.restaurant_menu, 'MENU', 3),
             _buildNavItem(Icons.settings, 'SETTINGS', 4),
           ],
@@ -136,7 +138,7 @@ class _DashboardPageState extends State<DashboardPage> {
         children: [
           Icon(
             icon,
-            color: isSelected ? const Color(0xFFfb8500) : Colors.blueGrey[300],
+            color: isSelected ? const Color(0xFFfb8500) : Colors.grey[600],
             size: 24,
           ),
           const SizedBox(height: 4),
@@ -145,7 +147,7 @@ class _DashboardPageState extends State<DashboardPage> {
             style: GoogleFonts.inter(
               fontSize: 10,
               fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
-              color: isSelected ? const Color(0xFFfb8500) : Colors.blueGrey[300],
+              color: isSelected ? const Color(0xFFfb8500) : Colors.grey[600],
             ),
           ),
         ],
