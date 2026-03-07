@@ -6,7 +6,9 @@ import '../../services/bill_service.dart';
 import 'transaction_details_page.dart';
 
 class HistoryTab extends StatefulWidget {
-  const HistoryTab({super.key});
+  final VoidCallback? onBack;
+
+  const HistoryTab({super.key, this.onBack});
 
   @override
   State<HistoryTab> createState() => _HistoryTabState();
@@ -126,15 +128,18 @@ class _HistoryTabState extends State<HistoryTab> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  IconButton(
-                    icon: const Icon(Icons.arrow_back, color: Color(0xFF14142B)),
-                    onPressed: () {
-                      // Handled by Dashboard or native back, just visual in tabs usually
-                      if (Navigator.canPop(context)) {
-                        Navigator.pop(context);
-                      }
-                    },
-                  ),
+                  if (widget.onBack != null)
+                    IconButton(
+                      icon: const Icon(Icons.arrow_back, color: Color(0xFF14142B)),
+                      onPressed: widget.onBack,
+                    )
+                  else if (Navigator.canPop(context))
+                    IconButton(
+                      icon: const Icon(Icons.arrow_back, color: Color(0xFF14142B)),
+                      onPressed: () => Navigator.pop(context),
+                    )
+                  else
+                    const SizedBox(width: 48),
                   Text(
                     'Transactions',
                     style: GoogleFonts.outfit(
