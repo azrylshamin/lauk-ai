@@ -34,7 +34,7 @@ class _LoginPageState extends State<LoginPage> {
     try {
       await context.read<AuthProvider>().login(email, password);
       if (mounted) {
-        Navigator.pushReplacementNamed(context, '/dashboard');
+        Navigator.pushNamedAndRemoveUntil(context, '/dashboard', (route) => false);
       }
     } catch (e) {
       setState(() {

@@ -116,31 +116,33 @@ class _SettingsTabState extends State<SettingsTab> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // --- App Bar ---
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Settings',
-                    style: GoogleFonts.outfit(
-                      fontSize: 22,
-                      fontWeight: FontWeight.w800,
-                      color: const Color(0xFF12121D),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 8.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Settings',
+                      style: GoogleFonts.outfit(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w800,
+                        color: const Color(0xFF14142B),
+                      ),
                     ),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFFB8500).withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(20),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFB8500).withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: const Text('LaukAI Pro',
+                          style: TextStyle(
+                              color: Color(0xFFFB8500),
+                              fontWeight: FontWeight.bold,
+                              fontSize: 13)),
                     ),
-                    child: const Text('LaukAI Pro',
-                        style: TextStyle(
-                            color: Color(0xFFFB8500),
-                            fontWeight: FontWeight.bold,
-                            fontSize: 13)),
-                  ),
-                ],
+                  ],
+                ),
               ),
               const SizedBox(height: 32),
 
@@ -410,8 +412,11 @@ class _SettingsTabState extends State<SettingsTab> {
                     backgroundColor: Colors.red[50],
                     foregroundColor: Colors.red[600],
                   ),
-                  onPressed: () {
-                    context.read<AuthProvider>().logout();
+                  onPressed: () async {
+                    await context.read<AuthProvider>().logout();
+                    if (context.mounted) {
+                      Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
+                    }
                   },
                   icon: const Icon(Icons.logout),
                   label: const Text(

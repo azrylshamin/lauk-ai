@@ -53,7 +53,7 @@ class _RegisterPageState extends State<RegisterPage> {
           .read<AuthProvider>()
           .register(name, email, password, restaurantName);
       if (mounted) {
-        Navigator.pushReplacementNamed(context, '/dashboard');
+        Navigator.pushNamedAndRemoveUntil(context, '/dashboard', (route) => false);
       }
     } catch (e) {
       setState(() {
