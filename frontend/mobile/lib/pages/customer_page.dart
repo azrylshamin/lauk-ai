@@ -21,6 +21,8 @@ class _CustomerPageState extends State<CustomerPage> {
   List<File> _images = [];
   int _activeImageIndex = 0;
   List<DetectionItem> _accumulatedItems = [];
+  double _accumulatedSst = 0.0;
+  double _accumulatedSc = 0.0;
   bool _hasResults = false;
   bool _loading = false;
   bool _loadingRestaurants = true;
@@ -72,12 +74,16 @@ class _CustomerPageState extends State<CustomerPage> {
       _error = null;
     });
     try {
+      _accumulatedSst = 0.0;
+      _accumulatedSc = 0.0;
       for (final image in _images) {
         final result = await _customerService.estimatePrice(
           _selectedRestaurant!.id,
           image.path,
         );
         _mergeItems(result.items);
+        _accumulatedSst += result.sstAmount;
+        _accumulatedSc += result.scAmount;
       }
       setState(() {
         _hasResults = true;
@@ -104,6 +110,8 @@ class _CustomerPageState extends State<CustomerPage> {
       );
       setState(() {
         _mergeItems(result.items);
+        _accumulatedSst += result.sstAmount;
+        _accumulatedSc += result.scAmount;
         _loading = false;
       });
     } catch (e) {
@@ -130,11 +138,17 @@ class _CustomerPageState extends State<CustomerPage> {
   double get _estimatedTotal =>
       _accumulatedItems.fold(0.0, (sum, i) => sum + i.subtotal);
 
+  double get _grandTotal => _estimatedTotal + _accumulatedSst + _accumulatedSc;
+
+  bool get _hasTax => _accumulatedSst > 0 || _accumulatedSc > 0;
+
   void _reset() {
     setState(() {
       _images = [];
       _activeImageIndex = 0;
       _accumulatedItems = [];
+      _accumulatedSst = 0.0;
+      _accumulatedSc = 0.0;
       _hasResults = false;
       _error = null;
     });
@@ -809,13 +823,27 @@ class _CustomerPageState extends State<CustomerPage> {
                   children: [
                     Text('TOTAL PAYABLE', style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w800, color: const Color(0xFF6E6E82), letterSpacing: 1)),
                     const SizedBox(height: 4),
-                    Text('RM ${_estimatedTotal.toStringAsFixed(2)}', style: GoogleFonts.outfit(fontSize: 28, fontWeight: FontWeight.w800, color: const Color(0xFFfb8500))),
+                    Text('RM ${_grandTotal.toStringAsFixed(2)}', style: GoogleFonts.outfit(fontSize: 28, fontWeight: FontWeight.w800, color: const Color(0xFFfb8500))),
                   ],
                 ),
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 6),
-                  child: Text('Includes 0% SST', style: GoogleFonts.inter(fontSize: 11, color: const Color(0xFF9EA3AE), fontWeight: FontWeight.w500)),
-                ),
+                if (_hasTax)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 6),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        if (_accumulatedSst > 0)
+                          Text('SST: RM ${_accumulatedSst.toStringAsFixed(2)}', style: GoogleFonts.inter(fontSize: 11, color: const Color(0xFF9EA3AE), fontWeight: FontWeight.w500)),
+                        if (_accumulatedSc > 0)
+                          Text('SC: RM ${_accumulatedSc.toStringAsFixed(2)}', style: GoogleFonts.inter(fontSize: 11, color: const Color(0xFF9EA3AE), fontWeight: FontWeight.w500)),
+                      ],
+                    ),
+                  )
+                else
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 6),
+                    child: Text('No tax applied', style: GoogleFonts.inter(fontSize: 11, color: const Color(0xFF9EA3AE), fontWeight: FontWeight.w500)),
+                  ),
               ],
             ),
             const SizedBox(height: 20),
