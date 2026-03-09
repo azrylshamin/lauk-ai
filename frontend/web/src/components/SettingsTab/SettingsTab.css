@@ -385,6 +385,60 @@
     color: var(--secondary);
 }
 
+/* ─── Tax Row ────────────────────────────────────────────── */
+.tax-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    background: #f9fafb;
+    border-radius: 10px;
+    border: 1px solid #e5e7eb;
+}
+
+.tax-label {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-heading);
+    flex: 1;
+}
+
+.tax-rate-input {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.tax-rate-input input {
+    width: 70px;
+    padding: 7px 10px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: var(--font-body);
+    font-weight: 700;
+    text-align: right;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.tax-rate-input input:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(251, 133, 0, 0.12);
+}
+
+.tax-rate-input input:disabled {
+    background: #f3f4f6;
+    color: var(--text-subtitle);
+    cursor: not-allowed;
+}
+
+.tax-rate-suffix {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-subtitle);
+}
+
 /* ─── Empty / Loading ─────────────────────────────────────── */
 .settings-empty {
     text-align: center;
