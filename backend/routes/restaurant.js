@@ -8,7 +8,7 @@ const router = Router();
 router.get("/", async (req, res) => {
     try {
         const { rows } = await pool.query(
-            "SELECT id, name, address, phone, created_at FROM restaurants WHERE id = $1",
+            "SELECT id, name, address, phone, sst_enabled, sst_rate, sc_enabled, sc_rate, created_at FROM restaurants WHERE id = $1",
             [req.restaurantId]
         );
 
@@ -26,7 +26,7 @@ router.get("/", async (req, res) => {
 // PATCH / — update restaurant profile (owner only)
 router.patch("/", requireOwner, async (req, res) => {
     try {
-        const { name, address, phone } = req.body;
+        const { name, address, phone, sst_enabled, sst_rate, sc_enabled, sc_rate } = req.body;
 
         const fields = [];
         const values = [];
@@ -44,6 +44,30 @@ router.patch("/", requireOwner, async (req, res) => {
             fields.push(`phone = $${idx++}`);
             values.push(phone.trim());
         }
+        if (sst_enabled !== undefined) {
+            fields.push(`sst_enabled = $${idx++}`);
+            values.push(Boolean(sst_enabled));
+        }
+        if (sst_rate !== undefined) {
+            const rate = parseFloat(sst_rate);
+            if (isNaN(rate) || rate < 0 || rate > 100) {
+                return res.status(400).json({ error: "SST rate must be between 0 and 100" });
+            }
+            fields.push(`sst_rate = $${idx++}`);
+            values.push(rate);
+        }
+        if (sc_enabled !== undefined) {
+            fields.push(`sc_enabled = $${idx++}`);
+            values.push(Boolean(sc_enabled));
+        }
+        if (sc_rate !== undefined) {
+            const rate = parseFloat(sc_rate);
+            if (isNaN(rate) || rate < 0 || rate > 100) {
+                return res.status(400).json({ error: "Service charge rate must be between 0 and 100" });
+            }
+            fields.push(`sc_rate = $${idx++}`);
+            values.push(rate);
+        }
 
         if (fields.length === 0) {
             return res.status(400).json({ error: "Nothing to update" });
@@ -51,7 +75,7 @@ router.patch("/", requireOwner, async (req, res) => {
 
         values.push(req.restaurantId);
         const { rows } = await pool.query(
-            `UPDATE restaurants SET ${fields.join(", ")} WHERE id = $${idx} RETURNING id, name, address, phone, created_at`,
+            `UPDATE restaurants SET ${fields.join(", ")} WHERE id = $${idx} RETURNING id, name, address, phone, sst_enabled, sst_rate, sc_enabled, sc_rate, created_at`,
             values
         );
 

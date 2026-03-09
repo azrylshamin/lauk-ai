@@ -80,10 +80,28 @@ router.post("/restaurants/:id/estimate", upload.single("file"), async (req, res)
         }
 
         const predictions = await aiRes.json();
-        const { items, total } = await lookupMenuItems(predictions.detections, restaurantId);
+        const { items, total: subtotal } = await lookupMenuItems(predictions.detections, restaurantId);
+
+        // Fetch restaurant tax settings
+        const { rows: restRows } = await pool.query(
+            "SELECT sst_enabled, sst_rate, sc_enabled, sc_rate FROM restaurants WHERE id = $1",
+            [restaurantId]
+        );
+        const rest = restRows[0];
+
+        const sstAmount = rest.sst_enabled
+            ? Math.round(subtotal * parseFloat(rest.sst_rate)) / 100
+            : 0;
+        const scAmount = rest.sc_enabled
+            ? Math.round(subtotal * parseFloat(rest.sc_rate)) / 100
+            : 0;
+        const total = Math.round((subtotal + sstAmount + scAmount) * 100) / 100;
 
         res.json({
             items,
+            subtotal,
+            sst_amount: sstAmount,
+            sc_amount: scAmount,
             total,
             count: predictions.count,
         });

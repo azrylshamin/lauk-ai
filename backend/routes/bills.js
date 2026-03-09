@@ -108,17 +108,37 @@ router.get("/:id", async (req, res) => {
 router.post("/", async (req, res) => {
     const client = await pool.connect();
     try {
-        const { items, total } = req.body;
+        const { items } = req.body;
 
         if (!items || !Array.isArray(items) || items.length === 0) {
             return res.status(400).json({ error: "items array is required" });
         }
 
+        // Compute subtotal server-side
+        const subtotal = Math.round(
+            items.reduce((sum, item) => sum + parseFloat(item.price) * (item.quantity || 1), 0) * 100
+        ) / 100;
+
+        // Fetch restaurant tax settings
+        const { rows: restRows } = await client.query(
+            "SELECT sst_enabled, sst_rate, sc_enabled, sc_rate FROM restaurants WHERE id = $1",
+            [req.restaurantId]
+        );
+        const rest = restRows[0];
+
+        const sstAmount = rest.sst_enabled
+            ? Math.round(subtotal * parseFloat(rest.sst_rate)) / 100
+            : 0;
+        const scAmount = rest.sc_enabled
+            ? Math.round(subtotal * parseFloat(rest.sc_rate)) / 100
+            : 0;
+        const total = Math.round((subtotal + sstAmount + scAmount) * 100) / 100;
+
         await client.query("BEGIN");
 
         const { rows: billRows } = await client.query(
-            "INSERT INTO bills (total, restaurant_id) VALUES ($1, $2) RETURNING *",
-            [parseFloat(total), req.restaurantId]
+            "INSERT INTO bills (subtotal, sst_amount, sc_amount, total, restaurant_id) VALUES ($1, $2, $3, $4, $5) RETURNING *",
+            [subtotal, sstAmount, scAmount, total, req.restaurantId]
         );
         const bill = billRows[0];
 
@@ -140,7 +160,10 @@ router.post("/", async (req, res) => {
 
         res.status(201).json({
             id: bill.id,
-            total: bill.total,
+            subtotal: parseFloat(bill.subtotal),
+            sst_amount: parseFloat(bill.sst_amount),
+            sc_amount: parseFloat(bill.sc_amount),
+            total: parseFloat(bill.total),
             created_at: bill.created_at,
         });
     } catch (err) {
