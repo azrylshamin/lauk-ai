@@ -44,11 +44,17 @@ class DetectionItem {
 class DetectionResult {
   final List<DetectionItem> items;
   final double total;
+  final double? subtotal;
+  final double sstAmount;
+  final double scAmount;
   final int count;
 
   DetectionResult({
     required this.items,
     required this.total,
+    this.subtotal,
+    this.sstAmount = 0.0,
+    this.scAmount = 0.0,
     required this.count,
   });
 
@@ -61,6 +67,21 @@ class DetectionResult {
               ? double.tryParse(json['total'])
               : json['total']?.toDouble()) ??
           0.0,
+      subtotal: json['subtotal'] != null
+          ? (json['subtotal'] is String
+              ? double.tryParse(json['subtotal'])
+              : json['subtotal']?.toDouble())
+          : null,
+      sstAmount: json['sst_amount'] != null
+          ? (json['sst_amount'] is String
+              ? double.tryParse(json['sst_amount'])
+              : json['sst_amount']?.toDouble()) ?? 0.0
+          : 0.0,
+      scAmount: json['sc_amount'] != null
+          ? (json['sc_amount'] is String
+              ? double.tryParse(json['sc_amount'])
+              : json['sc_amount']?.toDouble()) ?? 0.0
+          : 0.0,
       count: json['count'] ?? 0,
     );
   }

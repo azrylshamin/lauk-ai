@@ -1,6 +1,9 @@
 class Bill {
   final int id;
   final double total;
+  final double? subtotal;
+  final double sstAmount;
+  final double scAmount;
   final DateTime createdAt;
   final int itemCount;
   final List<BillItem>? items;
@@ -8,24 +11,34 @@ class Bill {
   Bill({
     required this.id,
     required this.total,
+    this.subtotal,
+    this.sstAmount = 0.0,
+    this.scAmount = 0.0,
     required this.createdAt,
     required this.itemCount,
     this.items,
   });
 
+  bool get hasTaxBreakdown => subtotal != null && (sstAmount > 0 || scAmount > 0);
+
   factory Bill.fromJson(Map<String, dynamic> json) {
     return Bill(
       id: json['id'],
-      total: (json['total'] is String
-              ? double.tryParse(json['total'])
-              : json['total']?.toDouble()) ??
-          0.0,
+      total: _parseDouble(json['total']),
+      subtotal: json['subtotal'] != null ? _parseDouble(json['subtotal']) : null,
+      sstAmount: json['sst_amount'] != null ? _parseDouble(json['sst_amount']) : 0.0,
+      scAmount: json['sc_amount'] != null ? _parseDouble(json['sc_amount']) : 0.0,
       createdAt: DateTime.parse(json['created_at']),
       itemCount: json['item_count'] ?? (json['items'] as List?)?.length ?? 0,
       items: json['items'] != null
           ? (json['items'] as List).map((i) => BillItem.fromJson(i)).toList()
           : null,
     );
+  }
+
+  static double _parseDouble(dynamic value) {
+    if (value is String) return double.tryParse(value) ?? 0.0;
+    return value?.toDouble() ?? 0.0;
   }
 }
 
