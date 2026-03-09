@@ -313,26 +313,46 @@ class _TransactionDetailsPageState extends State<TransactionDetailsPage> {
                                     
                                     const SizedBox(height: 16),
                                     
-                                    // Subtotal & SST (Assuming 6% SST for the mockup calculation if we wanted, 
-                                    // but let's just show Subtotal and calculate GST if needed, or simply Grand Total. 
-                                    // Since our DB stores 'total', let's mock SST if we have to, or just make Subtotal = Total)
-                                    Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Text('Subtotal', style: GoogleFonts.inter(color: const Color(0xFF6E7191), fontSize: 14)),
-                                        Text('RM ${_bill!.total.toStringAsFixed(2)}', style: GoogleFonts.inter(color: const Color(0xFF6E7191), fontSize: 14)),
+                                    // Subtotal & Tax Breakdown
+                                    if (_bill!.hasTaxBreakdown) ...[
+                                      Row(
+                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Text('Subtotal', style: GoogleFonts.inter(color: const Color(0xFF6E7191), fontSize: 14)),
+                                          Text('RM ${_bill!.subtotal!.toStringAsFixed(2)}', style: GoogleFonts.inter(color: const Color(0xFF6E7191), fontSize: 14)),
+                                        ],
+                                      ),
+                                      if (_bill!.sstAmount > 0) ...[
+                                        const SizedBox(height: 8),
+                                        Row(
+                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            Text('SST', style: GoogleFonts.inter(color: const Color(0xFF6E7191), fontSize: 14)),
+                                            Text('RM ${_bill!.sstAmount.toStringAsFixed(2)}', style: GoogleFonts.inter(color: const Color(0xFF6E7191), fontSize: 14)),
+                                          ],
+                                        ),
                                       ],
-                                    ),
-                                    const SizedBox(height: 8),
-                                    Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Text('SST (0%)', style: GoogleFonts.inter(color: const Color(0xFF6E7191), fontSize: 14)),
-                                        Text('RM 0.00', style: GoogleFonts.inter(color: const Color(0xFF6E7191), fontSize: 14)),
+                                      if (_bill!.scAmount > 0) ...[
+                                        const SizedBox(height: 8),
+                                        Row(
+                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            Text('Service Charge', style: GoogleFonts.inter(color: const Color(0xFF6E7191), fontSize: 14)),
+                                            Text('RM ${_bill!.scAmount.toStringAsFixed(2)}', style: GoogleFonts.inter(color: const Color(0xFF6E7191), fontSize: 14)),
+                                          ],
+                                        ),
                                       ],
-                                    ),
+                                    ] else ...[
+                                      Row(
+                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Text('Subtotal', style: GoogleFonts.inter(color: const Color(0xFF6E7191), fontSize: 14)),
+                                          Text('RM ${_bill!.total.toStringAsFixed(2)}', style: GoogleFonts.inter(color: const Color(0xFF6E7191), fontSize: 14)),
+                                        ],
+                                      ),
+                                    ],
                                     const SizedBox(height: 16),
-                                    
+
                                     // Grand Total
                                     Row(
                                       mainAxisAlignment: MainAxisAlignment.spaceBetween,

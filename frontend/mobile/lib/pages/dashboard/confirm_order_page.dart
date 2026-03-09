@@ -1,18 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../models/detection_result.dart';
+import '../../models/restaurant.dart';
 import '../../services/bill_service.dart';
 import 'order_success_page.dart';
 
 class ConfirmOrderPage extends StatefulWidget {
   final List<DetectionItem> items;
   final double total;
+  final Restaurant? restaurant;
   final VoidCallback onOrderCompleted;
 
   const ConfirmOrderPage({
     super.key,
     required this.items,
     required this.total,
+    this.restaurant,
     required this.onOrderCompleted,
   });
 
@@ -26,6 +29,20 @@ class _ConfirmOrderPageState extends State<ConfirmOrderPage> {
   bool _success = false;
   String? _error;
 
+  double get _sstAmount {
+    final r = widget.restaurant;
+    if (r == null || !r.sstEnabled) return 0;
+    return (widget.total * r.sstRate / 100 * 100).round() / 100;
+  }
+
+  double get _scAmount {
+    final r = widget.restaurant;
+    if (r == null || !r.scEnabled) return 0;
+    return (widget.total * r.scRate / 100 * 100).round() / 100;
+  }
+
+  double get _grandTotal => ((widget.total + _sstAmount + _scAmount) * 100).round() / 100;
+
   Future<void> _completeOrder() async {
     setState(() => _confirming = true);
     try {
@@ -37,16 +54,16 @@ class _ConfirmOrderPageState extends State<ConfirmOrderPage> {
                 'quantity': i.quantity,
               })
           .toList();
-      
-      final createdBill = await _billService.createBill(billItems, widget.total);
-      
+
+      final createdBill = await _billService.createBill(billItems, _grandTotal);
+
       setState(() {
         _success = true;
         _confirming = false;
       });
-      
+
       widget.onOrderCompleted();
-      
+
       if (mounted) {
         final result = await Navigator.push(
           context,
@@ -111,7 +128,7 @@ class _ConfirmOrderPageState extends State<ConfirmOrderPage> {
                 ],
               ),
             ),
-            
+
             Expanded(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
@@ -127,7 +144,7 @@ class _ConfirmOrderPageState extends State<ConfirmOrderPage> {
                       ),
                     ),
                     const SizedBox(height: 16),
-                    
+
                     // Order Card
                     Container(
                       decoration: BoxDecoration(
@@ -162,11 +179,6 @@ class _ConfirmOrderPageState extends State<ConfirmOrderPage> {
                                           borderRadius: BorderRadius.circular(12),
                                         ),
                                         child: const Icon(Icons.fastfood, color: Colors.grey),
-                                        // In a real app we'd load the item image here if available:
-                                        // child: ClipRRect(
-                                        //   borderRadius: BorderRadius.circular(12),
-                                        //   child: Image.network(item.imageUrl, fit: BoxFit.cover),
-                                        // ),
                                       ),
                                       const SizedBox(width: 16),
                                       Expanded(
@@ -209,7 +221,7 @@ class _ConfirmOrderPageState extends State<ConfirmOrderPage> {
                               ],
                             );
                           }),
-                          
+
                           // Dashed Divider
                           SizedBox(
                             height: 20,
@@ -247,32 +259,61 @@ class _ConfirmOrderPageState extends State<ConfirmOrderPage> {
                               ],
                             ),
                           ),
-                          
-                          // Grand Total
-                          Container(
-                            padding: const EdgeInsets.all(20),
-                            decoration: const BoxDecoration(
-                              color: Color(0xFFFFF9F0),
-                              borderRadius: BorderRadius.vertical(bottom: Radius.circular(20)),
-                            ),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+
+                          // Subtotal & Tax Breakdown
+                          Padding(
+                            padding: const EdgeInsets.only(left: 20, right: 20, top: 4, bottom: 20),
+                            child: Column(
                               children: [
-                                Text(
-                                  'Grand Total',
-                                  style: GoogleFonts.outfit(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w800,
-                                    color: const Color(0xFF14142B),
-                                  ),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text('Subtotal', style: GoogleFonts.inter(color: const Color(0xFF6E7191), fontSize: 14)),
+                                    Text('RM ${widget.total.toStringAsFixed(2)}', style: GoogleFonts.inter(color: const Color(0xFF6E7191), fontSize: 14)),
+                                  ],
                                 ),
-                                Text(
-                                  'RM ${widget.total.toStringAsFixed(2)}',
-                                  style: GoogleFonts.outfit(
-                                    fontSize: 22,
-                                    fontWeight: FontWeight.w800,
-                                    color: const Color(0xFFfb8500),
+                                if (_sstAmount > 0) ...[
+                                  const SizedBox(height: 8),
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Text('SST', style: GoogleFonts.inter(color: const Color(0xFF6E7191), fontSize: 14)),
+                                      Text('RM ${_sstAmount.toStringAsFixed(2)}', style: GoogleFonts.inter(color: const Color(0xFF6E7191), fontSize: 14)),
+                                    ],
                                   ),
+                                ],
+                                if (_scAmount > 0) ...[
+                                  const SizedBox(height: 8),
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Text('Service Charge', style: GoogleFonts.inter(color: const Color(0xFF6E7191), fontSize: 14)),
+                                      Text('RM ${_scAmount.toStringAsFixed(2)}', style: GoogleFonts.inter(color: const Color(0xFF6E7191), fontSize: 14)),
+                                    ],
+                                  ),
+                                ],
+                                const SizedBox(height: 16),
+                                // Grand Total
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                      'Grand Total',
+                                      style: GoogleFonts.outfit(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.w800,
+                                        color: const Color(0xFF14142B),
+                                      ),
+                                    ),
+                                    Text(
+                                      'RM ${_grandTotal.toStringAsFixed(2)}',
+                                      style: GoogleFonts.outfit(
+                                        fontSize: 20,
+                                        fontWeight: FontWeight.w800,
+                                        color: const Color(0xFFfb8500),
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ],
                             ),
@@ -280,9 +321,9 @@ class _ConfirmOrderPageState extends State<ConfirmOrderPage> {
                         ],
                       ),
                     ),
-                    
+
                     const SizedBox(height: 24),
-                    
+
                     // Info Card
                     Container(
                       padding: const EdgeInsets.all(16),
@@ -309,7 +350,7 @@ class _ConfirmOrderPageState extends State<ConfirmOrderPage> {
                         ],
                       ),
                     ),
-                    
+
                     if (_error != null) ...[
                       const SizedBox(height: 16),
                       Container(
@@ -321,7 +362,7 @@ class _ConfirmOrderPageState extends State<ConfirmOrderPage> {
                         child: Text(_error!, style: const TextStyle(color: Colors.red)),
                       ),
                     ],
-                    
+
                     const SizedBox(height: 100), // Padding for bottom button
                   ],
                 ),

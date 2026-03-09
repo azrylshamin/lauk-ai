@@ -4,8 +4,10 @@ import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import '../../models/detection_result.dart';
 import '../../models/menu_item.dart';
+import '../../models/restaurant.dart';
 import '../../services/predict_service.dart';
 import '../../services/menu_service.dart';
+import '../../services/restaurant_service.dart';
 import '../../widgets/add_item_sheet.dart';
 import 'confirm_order_page.dart';
 
@@ -20,6 +22,7 @@ class ScanTab extends StatefulWidget {
 class _ScanTabState extends State<ScanTab> {
   final _predictService = PredictService();
   final _menuService = MenuService();
+  final _restaurantService = RestaurantService();
 
   List<File> _images = [];
   int _activeImageIndex = 0;
@@ -27,6 +30,20 @@ class _ScanTabState extends State<ScanTab> {
   bool _detecting = false;
   String? _error;
   bool _success = false;
+  Restaurant? _restaurant;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadRestaurant();
+  }
+
+  Future<void> _loadRestaurant() async {
+    try {
+      final r = await _restaurantService.getProfile();
+      if (mounted) setState(() => _restaurant = r);
+    } catch (_) {}
+  }
 
   Future<void> _pickImage() async {
     final picker = ImagePicker();
@@ -146,6 +163,7 @@ class _ScanTabState extends State<ScanTab> {
         builder: (context) => ConfirmOrderPage(
           items: _items,
           total: _total,
+          restaurant: _restaurant,
           onOrderCompleted: () {},
         ),
       ),
