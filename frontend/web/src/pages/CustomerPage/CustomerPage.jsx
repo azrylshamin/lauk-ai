@@ -199,6 +199,27 @@ export default function CustomerPage() {
                             ))}
                         </div>
 
+                        {(result.sst_amount > 0 || result.sc_amount > 0) && (
+                            <div className="estimate-breakdown">
+                                <div className="estimate-line">
+                                    <span>Subtotal</span>
+                                    <span>RM {result.subtotal.toFixed(2)}</span>
+                                </div>
+                                {result.sst_amount > 0 && (
+                                    <div className="estimate-line tax-line">
+                                        <span>SST</span>
+                                        <span>RM {result.sst_amount.toFixed(2)}</span>
+                                    </div>
+                                )}
+                                {result.sc_amount > 0 && (
+                                    <div className="estimate-line tax-line">
+                                        <span>Service Charge</span>
+                                        <span>RM {result.sc_amount.toFixed(2)}</span>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
                         <div className="estimate-total">
                             <span className="estimate-total-label">Estimated Total</span>
                             <span className="estimate-total-price">

@@ -54,6 +54,28 @@ export default function BillDetail({ bill, onClose }) {
                         ))}
                 </div>
 
+                {/* Tax Breakdown */}
+                {bill.subtotal != null && (parseFloat(bill.sst_amount) > 0 || parseFloat(bill.sc_amount) > 0) && (
+                    <div className="bill-detail-breakdown">
+                        <div className="bill-detail-line">
+                            <span>Subtotal</span>
+                            <span>RM {parseFloat(bill.subtotal).toFixed(2)}</span>
+                        </div>
+                        {parseFloat(bill.sst_amount) > 0 && (
+                            <div className="bill-detail-line tax-line">
+                                <span>SST</span>
+                                <span>RM {parseFloat(bill.sst_amount).toFixed(2)}</span>
+                            </div>
+                        )}
+                        {parseFloat(bill.sc_amount) > 0 && (
+                            <div className="bill-detail-line tax-line">
+                                <span>Service Charge</span>
+                                <span>RM {parseFloat(bill.sc_amount).toFixed(2)}</span>
+                            </div>
+                        )}
+                    </div>
+                )}
+
                 {/* Total */}
                 <div className="bill-detail-total">
                     <span className="bill-detail-total-label">Total</span>

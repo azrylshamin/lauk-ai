@@ -1,6 +1,6 @@
-import { useState, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Camera, ClipboardList, Settings, Store } from "lucide-react";
-import { predictImage, assignMenuItem, saveBill } from "../../services/api";
+import { predictImage, assignMenuItem, saveBill, fetchRestaurant } from "../../services/api";
 import { useAuth } from "../../contexts/AuthContext";
 import Header from "../../components/Header/Header";
 import StatsBar from "../../components/StatsBar/StatsBar";
@@ -31,6 +31,22 @@ export default function DashboardPage() {
     const [showAddSheet, setShowAddSheet] = useState(false);
     const [assigningClass, setAssigningClass] = useState(null);
 
+    // ── Tax settings ─────────────────────────────────────────
+    const [taxSettings, setTaxSettings] = useState({
+        sst_enabled: false, sst_rate: 0, sc_enabled: false, sc_rate: 0,
+    });
+
+    useEffect(() => {
+        fetchRestaurant()
+            .then((data) => setTaxSettings({
+                sst_enabled: data.sst_enabled ?? false,
+                sst_rate: parseFloat(data.sst_rate) || 0,
+                sc_enabled: data.sc_enabled ?? false,
+                sc_rate: parseFloat(data.sc_rate) || 0,
+            }))
+            .catch(() => {});
+    }, []);
+
     // ── Derived ────────────────────────────────────────────────
     const total = useMemo(() => {
         if (!editableItems) return 0;
@@ -46,6 +62,12 @@ export default function DashboardPage() {
     }, [editableItems]);
 
     const hasUnknown = editableItems?.some((item) => !item.known);
+
+    const sstAmount = taxSettings.sst_enabled
+        ? Math.round(total * taxSettings.sst_rate) / 100 : 0;
+    const scAmount = taxSettings.sc_enabled
+        ? Math.round(total * taxSettings.sc_rate) / 100 : 0;
+    const grandTotal = Math.round((total + sstAmount + scAmount) * 100) / 100;
 
     // ── Handlers ───────────────────────────────────────────────
     const handleFileChange = (e) => {
@@ -219,6 +241,12 @@ export default function DashboardPage() {
                                     items={editableItems}
                                     itemCount={itemCount}
                                     total={total}
+                                    subtotal={total}
+                                    sstAmount={sstAmount}
+                                    scAmount={scAmount}
+                                    grandTotal={grandTotal}
+                                    sstRate={taxSettings.sst_rate}
+                                    scRate={taxSettings.sc_rate}
                                     hasUnknown={hasUnknown}
                                     confirming={confirming}
                                     assigningClass={assigningClass}

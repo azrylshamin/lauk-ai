@@ -89,11 +89,35 @@
 /* ─── Total Row ──────────────────────────────────────────── */
 .receipt-total {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 24px;
+    flex-direction: column;
+    gap: 8px;
+    padding: 20px 24px;
     border-top: 1px solid var(--border-light);
     background: var(--background);
+}
+
+.receipt-line {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-heading);
+    font-family: var(--font-body);
+}
+
+.receipt-line.tax-line {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-subtitle);
+}
+
+.receipt-total-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 8px;
+    border-top: 1px dashed var(--border-light);
 }
 
 .total-label {

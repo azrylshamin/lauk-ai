@@ -266,6 +266,30 @@
     font-weight: 500;
 }
 
+.estimate-breakdown {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 12px 24px;
+    border-top: 1px dashed var(--border-light);
+}
+
+.estimate-line {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-heading);
+    font-family: var(--font-body);
+}
+
+.estimate-line.tax-line {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-subtitle);
+}
+
 .estimate-total {
     display: flex;
     justify-content: space-between;

@@ -109,6 +109,32 @@
     white-space: nowrap;
 }
 
+/* ─── Tax Breakdown ─────────────────────────────────────── */
+.bill-detail-breakdown {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 12px 20px;
+    border-top: 1px dashed #e5e7eb;
+    background: var(--background);
+}
+
+.bill-detail-line {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-heading);
+    font-family: var(--font-body);
+}
+
+.bill-detail-line.tax-line {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-subtitle);
+}
+
 /* ─── Total ──────────────────────────────────────────────── */
 .bill-detail-total {
     display: flex;

@@ -6,6 +6,12 @@ export default function Receipt({
     items,
     itemCount,
     total,
+    subtotal,
+    sstAmount,
+    scAmount,
+    grandTotal,
+    sstRate,
+    scRate,
     hasUnknown,
     confirming,
     assigningClass,
@@ -17,6 +23,8 @@ export default function Receipt({
     onAddItem,
     onConfirm,
 }) {
+    const hasTax = sstAmount > 0 || scAmount > 0;
+    const displayTotal = hasTax ? grandTotal : total;
     return (
         <div className="receipt">
             <div className="receipt-header">
@@ -62,10 +70,32 @@ export default function Receipt({
             )}
 
             <div className="receipt-total">
-                <span className="total-label">Total</span>
-                <span className="total-price">
-                    RM {(Math.round(total * 100) / 100).toFixed(2)}
-                </span>
+                {hasTax && (
+                    <>
+                        <div className="receipt-line">
+                            <span>Subtotal</span>
+                            <span>RM {(Math.round(subtotal * 100) / 100).toFixed(2)}</span>
+                        </div>
+                        {sstAmount > 0 && (
+                            <div className="receipt-line tax-line">
+                                <span>SST ({sstRate}%)</span>
+                                <span>RM {sstAmount.toFixed(2)}</span>
+                            </div>
+                        )}
+                        {scAmount > 0 && (
+                            <div className="receipt-line tax-line">
+                                <span>Service Charge ({scRate}%)</span>
+                                <span>RM {scAmount.toFixed(2)}</span>
+                            </div>
+                        )}
+                    </>
+                )}
+                <div className="receipt-total-row">
+                    <span className="total-label">Total</span>
+                    <span className="total-price">
+                        RM {(Math.round(displayTotal * 100) / 100).toFixed(2)}
+                    </span>
+                </div>
             </div>
 
             <button
