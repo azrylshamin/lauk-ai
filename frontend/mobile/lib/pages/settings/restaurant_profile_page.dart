@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/restaurant_service.dart';
@@ -15,6 +16,10 @@ class _RestaurantProfilePageState extends State<RestaurantProfilePage> {
   final _nameController = TextEditingController();
   final _addressController = TextEditingController();
   final _phoneController = TextEditingController();
+  final _sstRateController = TextEditingController();
+  final _scRateController = TextEditingController();
+  bool _sstEnabled = false;
+  bool _scEnabled = false;
   bool _loading = true;
   bool _saving = false;
   String? _message;
@@ -31,6 +36,10 @@ class _RestaurantProfilePageState extends State<RestaurantProfilePage> {
       _nameController.text = r.name;
       _addressController.text = r.address;
       _phoneController.text = r.phone;
+      _sstEnabled = r.sstEnabled;
+      _scEnabled = r.scEnabled;
+      _sstRateController.text = r.sstRate.toString();
+      _scRateController.text = r.scRate.toString();
       if (mounted) setState(() => _loading = false);
     } catch (_) {
       if (mounted) setState(() => _loading = false);
@@ -50,6 +59,10 @@ class _RestaurantProfilePageState extends State<RestaurantProfilePage> {
         'name': _nameController.text.trim(),
         'address': _addressController.text.trim(),
         'phone': _phoneController.text.trim(),
+        'sst_enabled': _sstEnabled,
+        'sst_rate': double.tryParse(_sstRateController.text) ?? 6.0,
+        'sc_enabled': _scEnabled,
+        'sc_rate': double.tryParse(_scRateController.text) ?? 10.0,
       });
       if (mounted) {
         setState(() {
@@ -76,6 +89,8 @@ class _RestaurantProfilePageState extends State<RestaurantProfilePage> {
     _nameController.dispose();
     _addressController.dispose();
     _phoneController.dispose();
+    _sstRateController.dispose();
+    _scRateController.dispose();
     super.dispose();
   }
 
@@ -113,6 +128,38 @@ class _RestaurantProfilePageState extends State<RestaurantProfilePage> {
                     enabled: isOwner,
                     keyboardType: TextInputType.phone,
                   ),
+                  const SizedBox(height: 32),
+
+                  // Tax & Charges Section
+                  Text(
+                    'Tax & Charges',
+                    style: GoogleFonts.outfit(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w800,
+                      color: const Color(0xFF14142B),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // SST Row
+                  _buildTaxRow(
+                    label: 'SST',
+                    enabled: _sstEnabled,
+                    rateController: _sstRateController,
+                    isOwner: isOwner,
+                    onToggle: (val) => setState(() => _sstEnabled = val),
+                  ),
+                  const SizedBox(height: 12),
+
+                  // Service Charge Row
+                  _buildTaxRow(
+                    label: 'Service Charge',
+                    enabled: _scEnabled,
+                    rateController: _scRateController,
+                    isOwner: isOwner,
+                    onToggle: (val) => setState(() => _scEnabled = val),
+                  ),
+
                   if (_message != null) ...[
                     const SizedBox(height: 16),
                     Text(
@@ -154,6 +201,82 @@ class _RestaurantProfilePageState extends State<RestaurantProfilePage> {
                 ],
               ),
             ),
+    );
+  }
+
+  Widget _buildTaxRow({
+    required String label,
+    required bool enabled,
+    required TextEditingController rateController,
+    required bool isOwner,
+    required ValueChanged<bool> onToggle,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF9FAFB),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
+      ),
+      child: Row(
+        children: [
+          Switch(
+            value: enabled,
+            onChanged: isOwner ? onToggle : null,
+            activeTrackColor: const Color(0xFFFB8500),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              label,
+              style: GoogleFonts.inter(
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
+                color: const Color(0xFF14142B),
+              ),
+            ),
+          ),
+          SizedBox(
+            width: 70,
+            child: TextField(
+              controller: rateController,
+              enabled: isOwner && enabled,
+              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              textAlign: TextAlign.right,
+              style: GoogleFonts.inter(
+                fontSize: 15,
+                fontWeight: FontWeight.w700,
+              ),
+              decoration: InputDecoration(
+                suffixText: '%',
+                suffixStyle: GoogleFonts.inter(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                  color: const Color(0xFF6E7191),
+                ),
+                isDense: true,
+                contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: const BorderSide(color: Color(0xFFD1D5DB)),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: const BorderSide(color: Color(0xFFD1D5DB)),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: const BorderSide(color: Color(0xFFFB8500)),
+                ),
+                disabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
