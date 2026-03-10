@@ -6,6 +6,7 @@ import 'pages/customer_page.dart';
 import 'pages/login_page.dart';
 import 'pages/register_page.dart';
 import 'pages/dashboard/dashboard_page.dart';
+import 'pages/onboarding/onboarding_page.dart';
 
 void main() {
   runApp(
@@ -82,18 +83,22 @@ class LaukAiApp extends StatelessWidget {
             switch (settings.name) {
               case '/login':
                 if (auth.isAuthenticated) {
+                  if (auth.needsOnboarding) return const OnboardingPage();
                   return const DashboardPage();
                 }
                 return const LoginPage();
               case '/register':
                 if (auth.isAuthenticated) {
+                  if (auth.needsOnboarding) return const OnboardingPage();
                   return const DashboardPage();
                 }
                 return const RegisterPage();
+              case '/onboarding':
+                if (!auth.isAuthenticated) return const LoginPage();
+                return const OnboardingPage();
               case '/dashboard':
-                if (!auth.isAuthenticated) {
-                  return const LoginPage();
-                }
+                if (!auth.isAuthenticated) return const LoginPage();
+                if (auth.needsOnboarding) return const OnboardingPage();
                 return const DashboardPage();
               case '/':
               default:
