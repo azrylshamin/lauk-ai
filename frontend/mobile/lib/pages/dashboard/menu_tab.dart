@@ -1,5 +1,7 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../models/menu_item.dart';
 import '../../services/menu_service.dart';
 
@@ -82,6 +84,8 @@ class _MenuTabState extends State<MenuTab> {
       backgroundColor: Colors.transparent,
       builder: (ctx) {
         // We use StatefulBuilder so the dropdown can update locally without rebuilding MenuTab
+        String? localImagePath;
+        bool removeExistingImage = false;
         return StatefulBuilder(
           builder: (BuildContext context, StateSetter setModalState) {
             return Container(
@@ -160,6 +164,86 @@ class _MenuTabState extends State<MenuTab> {
                       ),
                       keyboardType: const TextInputType.numberWithOptions(decimal: true),
                     ),
+                    const SizedBox(height: 12),
+                    // Image picker
+                    Stack(
+                      children: [
+                        GestureDetector(
+                          onTap: () async {
+                            final picker = ImagePicker();
+                            final picked = await picker.pickImage(
+                                source: ImageSource.gallery, maxWidth: 800);
+                            if (picked != null) {
+                              setModalState(() {
+                                localImagePath = picked.path;
+                                removeExistingImage = false;
+                              });
+                            }
+                          },
+                          child: Container(
+                            height: 100,
+                            width: double.infinity,
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFF9FAFB),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: const Color(0xFFE5E7EB)),
+                              image: localImagePath != null
+                                  ? DecorationImage(
+                                      image: FileImage(File(localImagePath!)),
+                                      fit: BoxFit.cover)
+                                  : (!removeExistingImage && item?.imageUrl != null)
+                                      ? DecorationImage(
+                                          image: NetworkImage(item!.imageUrl!),
+                                          fit: BoxFit.cover)
+                                      : null,
+                            ),
+                            child: (localImagePath == null &&
+                                    (removeExistingImage || item?.imageUrl == null))
+                                ? Center(
+                                    child: Column(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        Icon(Icons.add_a_photo,
+                                            color: Colors.grey[400]),
+                                        const SizedBox(height: 4),
+                                        Text('Add Photo',
+                                            style: TextStyle(
+                                                color: Colors.grey[500],
+                                                fontSize: 12)),
+                                      ],
+                                    ),
+                                  )
+                                : null,
+                          ),
+                        ),
+                        // Remove button when image is shown
+                        if (localImagePath != null ||
+                            (!removeExistingImage && item?.imageUrl != null))
+                          Positioned(
+                            top: 4,
+                            right: 4,
+                            child: GestureDetector(
+                              onTap: () {
+                                setModalState(() {
+                                  localImagePath = null;
+                                  if (item?.imageUrl != null) {
+                                    removeExistingImage = true;
+                                  }
+                                });
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.all(4),
+                                decoration: BoxDecoration(
+                                  color: Colors.black.withValues(alpha: 0.6),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(Icons.close,
+                                    color: Colors.white, size: 18),
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
                     const SizedBox(height: 24),
                     Row(
                       children: [
@@ -208,12 +292,25 @@ class _MenuTabState extends State<MenuTab> {
 
                                 try {
                                   if (item == null) {
-                                    await _menuService.createMenuItem(yolo, name, price);
+                                    final newItem = await _menuService
+                                        .createMenuItem(yolo, name, price);
+                                    if (localImagePath != null) {
+                                      await _menuService.uploadMenuItemImage(
+                                          newItem.id, localImagePath!);
+                                    }
                                   } else {
                                     await _menuService.updateMenuItem(item.id, {
                                       'name': name,
                                       'price': price,
                                     });
+                                    if (removeExistingImage &&
+                                        localImagePath == null) {
+                                      await _menuService
+                                          .deleteMenuItemImage(item.id);
+                                    } else if (localImagePath != null) {
+                                      await _menuService.uploadMenuItemImage(
+                                          item.id, localImagePath!);
+                                    }
                                   }
                                   _load();
                                 } catch (e) {
@@ -378,7 +475,7 @@ class _MenuTabState extends State<MenuTab> {
                                 ),
                                 child: Row(
                                   children: [
-                                    // Class Icon
+                                    // Class Icon / Image
                                     Container(
                                       width: 80,
                                       height: 80,
@@ -387,14 +484,22 @@ class _MenuTabState extends State<MenuTab> {
                                             ? const Color(0xFFfb8500).withValues(alpha: 0.08)
                                             : Colors.grey[100],
                                         borderRadius: BorderRadius.circular(12),
+                                        image: item.imageUrl != null
+                                            ? DecorationImage(
+                                                image: NetworkImage(item.imageUrl!),
+                                                fit: BoxFit.cover,
+                                              )
+                                            : null,
                                       ),
-                                      child: Icon(
-                                        _classIcons[item.yoloClass] ?? Icons.restaurant,
-                                        color: item.active
-                                            ? const Color(0xFFfb8500)
-                                            : Colors.grey[400],
-                                        size: 32,
-                                      ),
+                                      child: item.imageUrl == null
+                                          ? Icon(
+                                              _classIcons[item.yoloClass] ?? Icons.restaurant,
+                                              color: item.active
+                                                  ? const Color(0xFFfb8500)
+                                                  : Colors.grey[400],
+                                              size: 32,
+                                            )
+                                          : null,
                                     ),
                                     const SizedBox(width: 16),
                                     

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/restaurant_service.dart';
@@ -23,6 +24,7 @@ class _RestaurantProfilePageState extends State<RestaurantProfilePage> {
   bool _loading = true;
   bool _saving = false;
   String? _message;
+  String? _imageUrl;
 
   @override
   void initState() {
@@ -40,10 +42,89 @@ class _RestaurantProfilePageState extends State<RestaurantProfilePage> {
       _scEnabled = r.scEnabled;
       _sstRateController.text = r.sstRate.toString();
       _scRateController.text = r.scRate.toString();
+      _imageUrl = r.imageUrl;
       if (mounted) setState(() => _loading = false);
     } catch (_) {
       if (mounted) setState(() => _loading = false);
     }
+  }
+
+  Future<void> _pickAndUploadImage() async {
+    final picker = ImagePicker();
+    final picked =
+        await picker.pickImage(source: ImageSource.gallery, maxWidth: 800);
+    if (picked == null) return;
+
+    setState(() => _saving = true);
+    try {
+      final r = await _restaurantService.uploadImage(picked.path);
+      if (mounted) {
+        setState(() {
+          _imageUrl = r.imageUrl;
+          _saving = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _saving = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to upload image: $e')),
+        );
+      }
+    }
+  }
+
+  Future<void> _deleteImage() async {
+    setState(() => _saving = true);
+    try {
+      await _restaurantService.deleteImage();
+      if (mounted) {
+        setState(() {
+          _imageUrl = null;
+          _saving = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _saving = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to remove image: $e')),
+        );
+      }
+    }
+  }
+
+  void _showImageOptions() {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.photo_library),
+              title: const Text('Change Photo'),
+              onTap: () {
+                Navigator.pop(ctx);
+                _pickAndUploadImage();
+              },
+            ),
+            ListTile(
+              leading: Icon(Icons.delete_outline, color: Colors.red[600]),
+              title: Text('Remove Photo',
+                  style: TextStyle(color: Colors.red[600])),
+              onTap: () {
+                Navigator.pop(ctx);
+                _deleteImage();
+              },
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   Future<void> _save() async {
@@ -110,6 +191,47 @@ class _RestaurantProfilePageState extends State<RestaurantProfilePage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
+                  // Restaurant Image
+                  Center(
+                    child: GestureDetector(
+                      onTap: isOwner
+                          ? (_imageUrl != null
+                              ? _showImageOptions
+                              : _pickAndUploadImage)
+                          : null,
+                      child: Container(
+                        width: 120,
+                        height: 120,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF9FAFB),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: const Color(0xFFE5E7EB)),
+                          image: _imageUrl != null
+                              ? DecorationImage(
+                                  image: NetworkImage(_imageUrl!),
+                                  fit: BoxFit.cover,
+                                )
+                              : null,
+                        ),
+                        child: _imageUrl == null
+                            ? Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(Icons.restaurant,
+                                      size: 40, color: Colors.grey[400]),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    isOwner ? 'Add Photo' : 'No Photo',
+                                    style: TextStyle(
+                                        color: Colors.grey[500], fontSize: 12),
+                                  ),
+                                ],
+                              )
+                            : null,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
                   TextField(
                     controller: _nameController,
                     decoration: const InputDecoration(labelText: 'Restaurant Name'),
