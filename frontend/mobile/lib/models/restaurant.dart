@@ -7,6 +7,7 @@ class Restaurant {
   final double sstRate;
   final bool scEnabled;
   final double scRate;
+  final String? imageUrl;
 
   Restaurant({
     required this.id,
@@ -17,6 +18,7 @@ class Restaurant {
     this.sstRate = 6.0,
     this.scEnabled = false,
     this.scRate = 10.0,
+    this.imageUrl,
   });
 
   factory Restaurant.fromJson(Map<String, dynamic> json) {
@@ -35,6 +37,7 @@ class Restaurant {
               ? double.tryParse(json['sc_rate'])
               : json['sc_rate']?.toDouble()) ??
           10.0,
+      imageUrl: json['image_url'],
     );
   }
 }

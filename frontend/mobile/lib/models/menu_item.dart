@@ -4,6 +4,7 @@ class MenuItem {
   final String name;
   final double price;
   final bool active;
+  final String? imageUrl;
 
   MenuItem({
     required this.id,
@@ -11,6 +12,7 @@ class MenuItem {
     required this.name,
     required this.price,
     required this.active,
+    this.imageUrl,
   });
 
   factory MenuItem.fromJson(Map<String, dynamic> json) {
@@ -23,6 +25,7 @@ class MenuItem {
               : json['price']?.toDouble()) ??
           0.0,
       active: json['active'] ?? true,
+      imageUrl: json['image_url'],
     );
   }
 }
