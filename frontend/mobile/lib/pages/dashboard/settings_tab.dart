@@ -236,32 +236,46 @@ class _SettingsTabState extends State<SettingsTab> {
                         )
                       ],
                     ),
-                    const SizedBox(height: 8),
-                    Text(
-                      _restaurant?.address ?? '-',
-                      style: TextStyle(color: Colors.grey[600], fontSize: 14),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      _restaurant?.phone ?? '-',
-                      style: TextStyle(color: Colors.grey[600], fontSize: 14),
-                    ),
+                    if (_restaurant?.address != null && _restaurant!.address!.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 8),
+                        child: Text(
+                          _restaurant!.address!,
+                          style: TextStyle(color: Colors.grey[600], fontSize: 14),
+                        ),
+                      ),
+                    if (_restaurant?.phone != null && _restaurant!.phone!.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 4),
+                        child: Text(
+                          _restaurant!.phone!,
+                          style: TextStyle(color: Colors.grey[600], fontSize: 14),
+                        ),
+                      ),
                     const SizedBox(height: 16),
                     ClipRRect(
                       borderRadius: BorderRadius.circular(16),
-                      child: Image.asset(
-                        'assets/images/restaurant_placeholder.jpg',
-                        height: 120,
-                        width: double.infinity,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, _, __) => Container(
-                          height: 120,
-                          width: double.infinity,
-                          color: Colors.grey[200],
-                          child: Icon(Icons.restaurant,
-                              color: Colors.grey[400], size: 48),
-                        ),
-                      ),
+                      child: _restaurant?.imageUrl != null && _restaurant!.imageUrl!.isNotEmpty
+                          ? Image.network(
+                              _restaurant!.imageUrl!,
+                              height: 120,
+                              width: double.infinity,
+                              fit: BoxFit.contain,
+                              errorBuilder: (context, _, s) => Container(
+                                height: 120,
+                                width: double.infinity,
+                                color: Colors.grey[200],
+                                child: Icon(Icons.restaurant,
+                                    color: Colors.grey[400], size: 48),
+                              ),
+                            )
+                          : Container(
+                              height: 120,
+                              width: double.infinity,
+                              color: Colors.grey[200],
+                              child: Icon(Icons.restaurant,
+                                  color: Colors.grey[400], size: 48),
+                            ),
                     ),
                   ],
                 ),

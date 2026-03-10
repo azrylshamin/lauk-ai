@@ -286,13 +286,18 @@ class _CustomerPageState extends State<CustomerPage> {
                               width: 64,
                               height: 64,
                               color: Colors.grey[200],
-                              child: Image.asset(
-                                'assets/images/restaurant_placeholder.jpg',
-                                fit: BoxFit.cover,
-                                errorBuilder: (context, error, stackTrace) =>
-                                    Icon(Icons.restaurant,
-                                        color: Colors.grey[400]),
-                              ),
+                              child: r.imageUrl != null
+                                  ? Image.network(
+                                      r.imageUrl!,
+                                      fit: BoxFit.cover,
+                                      width: 64,
+                                      height: 64,
+                                      errorBuilder: (context, _, s) =>
+                                          Icon(Icons.restaurant,
+                                              color: Colors.grey[400]),
+                                    )
+                                  : Icon(Icons.restaurant,
+                                      color: Colors.grey[400]),
                             ),
                           ),
                           const SizedBox(width: 16),
