@@ -20,4 +20,21 @@ class RestaurantService {
     }
     throw Exception('Failed to update restaurant profile');
   }
+
+  Future<Restaurant> uploadImage(String filePath) async {
+    final response =
+        await _api.uploadEntityImage('/api/restaurant/image', filePath);
+    if (response.statusCode == 200) {
+      return Restaurant.fromJson(jsonDecode(response.body));
+    }
+    throw Exception('Failed to upload restaurant image');
+  }
+
+  Future<Restaurant> deleteImage() async {
+    final response = await _api.delete('/api/restaurant/image');
+    if (response.statusCode == 200) {
+      return Restaurant.fromJson(jsonDecode(response.body));
+    }
+    throw Exception('Failed to delete restaurant image');
+  }
 }

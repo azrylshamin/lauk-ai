@@ -41,4 +41,21 @@ class MenuService {
       throw Exception('Failed to delete menu item');
     }
   }
+
+  Future<MenuItem> uploadMenuItemImage(int id, String filePath) async {
+    final response =
+        await _api.uploadEntityImage('/api/menu-items/$id/image', filePath);
+    if (response.statusCode == 200) {
+      return MenuItem.fromJson(jsonDecode(response.body));
+    }
+    throw Exception('Failed to upload menu item image');
+  }
+
+  Future<MenuItem> deleteMenuItemImage(int id) async {
+    final response = await _api.delete('/api/menu-items/$id/image');
+    if (response.statusCode == 200) {
+      return MenuItem.fromJson(jsonDecode(response.body));
+    }
+    throw Exception('Failed to delete menu item image');
+  }
 }

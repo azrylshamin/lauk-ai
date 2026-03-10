@@ -93,6 +93,26 @@ class ApiService {
     return response;
   }
 
+  Future<http.Response> uploadEntityImage(String path, String filePath) async {
+    final request = http.MultipartRequest(
+      'POST',
+      Uri.parse('$apiUrl$path'),
+    );
+    if (_token != null) {
+      request.headers['Authorization'] = 'Bearer $_token';
+    }
+    final ext = filePath.toLowerCase().endsWith('.png') ? 'png' : 'jpeg';
+    request.files.add(await http.MultipartFile.fromPath(
+      'image',
+      filePath,
+      contentType: MediaType('image', ext),
+    ));
+    final streamed = await request.send();
+    final response = await http.Response.fromStream(streamed);
+    _handleUnauthorized(response);
+    return response;
+  }
+
   void _handleUnauthorized(http.Response response) {
     if (response.statusCode == 401) {
       onUnauthorized?.call();
