@@ -107,6 +107,14 @@ router.post("/:id/image", uploadMenuItem.single("image"), async (req, res) => {
         }
 
         const { id } = req.params;
+
+        // Destroy the old image from Cloudinary before replacing
+        const { rows: old } = await pool.query(
+            "SELECT image_url FROM menu_items WHERE id = $1 AND restaurant_id = $2",
+            [id, req.restaurantId]
+        );
+        await destroyImage(old[0]?.image_url);
+
         const imageUrl = req.file.path;
 
         const { rows } = await pool.query(

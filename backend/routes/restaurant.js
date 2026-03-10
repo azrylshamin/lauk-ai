@@ -99,6 +99,13 @@ router.post("/image", requireOwner, uploadRestaurant.single("image"), async (req
             return res.status(400).json({ error: "No image file provided" });
         }
 
+        // Destroy the old image from Cloudinary before replacing
+        const { rows: old } = await pool.query(
+            "SELECT image_url FROM restaurants WHERE id = $1",
+            [req.restaurantId]
+        );
+        await destroyImage(old[0]?.image_url);
+
         const imageUrl = req.file.path;
 
         const { rows } = await pool.query(
