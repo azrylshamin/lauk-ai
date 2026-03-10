@@ -1,8 +1,10 @@
 const { Router } = require("express");
 const pool = require("../db/db");
 const { requireOwner } = require("../middleware/auth");
+const { createUpload, destroyImage } = require("../middleware/upload");
 
 const router = Router();
+const uploadMenuItem = createUpload("menu-items");
 
 // List all menu items for the authenticated restaurant
 router.get("/", async (req, res) => {
@@ -52,7 +54,7 @@ router.post("/", async (req, res) => {
 router.patch("/:id", async (req, res) => {
     try {
         const { id } = req.params;
-        const { name, price, active } = req.body;
+        const { name, price, active, image_url } = req.body;
 
         const fields = [];
         const values = [];
@@ -69,6 +71,10 @@ router.patch("/:id", async (req, res) => {
         if (active !== undefined) {
             fields.push(`active = $${idx++}`);
             values.push(Boolean(active));
+        }
+        if (image_url !== undefined) {
+            fields.push(`image_url = $${idx++}`);
+            values.push(image_url);
         }
 
         if (fields.length === 0) {
@@ -89,6 +95,60 @@ router.patch("/:id", async (req, res) => {
         res.json(rows[0]);
     } catch (err) {
         console.error("Menu item update error:", err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// POST /:id/image — upload menu item image
+router.post("/:id/image", uploadMenuItem.single("image"), async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ error: "No image file provided" });
+        }
+
+        const { id } = req.params;
+        const imageUrl = req.file.path;
+
+        const { rows } = await pool.query(
+            `UPDATE menu_items SET image_url = $1 WHERE id = $2 AND restaurant_id = $3 RETURNING *`,
+            [imageUrl, id, req.restaurantId]
+        );
+
+        if (rows.length === 0) {
+            return res.status(404).json({ error: "Menu item not found" });
+        }
+
+        res.json(rows[0]);
+    } catch (err) {
+        console.error("Menu item image upload error:", err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// DELETE /:id/image — remove menu item image
+router.delete("/:id/image", async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const { rows: current } = await pool.query(
+            "SELECT image_url FROM menu_items WHERE id = $1 AND restaurant_id = $2",
+            [id, req.restaurantId]
+        );
+
+        if (current.length === 0) {
+            return res.status(404).json({ error: "Menu item not found" });
+        }
+
+        await destroyImage(current[0].image_url);
+
+        const { rows } = await pool.query(
+            `UPDATE menu_items SET image_url = NULL WHERE id = $1 AND restaurant_id = $2 RETURNING *`,
+            [id, req.restaurantId]
+        );
+
+        res.json(rows[0]);
+    } catch (err) {
+        console.error("Menu item image delete error:", err);
         res.status(500).json({ error: err.message });
     }
 });
