@@ -8,6 +8,7 @@ class Restaurant {
   final bool scEnabled;
   final double scRate;
   final String? imageUrl;
+  final bool onboardingCompleted;
 
   Restaurant({
     required this.id,
@@ -19,6 +20,7 @@ class Restaurant {
     this.scEnabled = false,
     this.scRate = 10.0,
     this.imageUrl,
+    this.onboardingCompleted = false,
   });
 
   factory Restaurant.fromJson(Map<String, dynamic> json) {
@@ -38,6 +40,7 @@ class Restaurant {
               : json['sc_rate']?.toDouble()) ??
           10.0,
       imageUrl: json['image_url'],
+      onboardingCompleted: json['onboarding_completed'] ?? false,
     );
   }
 }
