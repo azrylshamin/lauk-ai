@@ -83,42 +83,43 @@ class _DashboardPageState extends State<DashboardPage> {
           const SettingsTab(),
         ],
       ),
-      floatingActionButton: Container(
-        margin: const EdgeInsets.only(top: 48), // Increased top margin to push it further downwards
-        padding: const EdgeInsets.all(4),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          shape: BoxShape.circle,
-          boxShadow: [
-            BoxShadow(
-              color: const Color(0xFFfb8500).withOpacity(0.3),
-              blurRadius: 16,
-              offset: const Offset(0, 8),
-            ),
-          ],
-        ),
-        child: FloatingActionButton(
-          backgroundColor: const Color(0xFFfb8500),
-          foregroundColor: Colors.white,
-          elevation: 0,
-          onPressed: () => _onTabChanged(2),
-          child: const Icon(Icons.qr_code_scanner, size: 28),
-        ),
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       bottomNavigationBar: BottomAppBar(
         color: Colors.white,
         elevation: 10,
         shadowColor: Colors.black.withOpacity(0.1),
-        shape: const CircularNotchedRectangle(),
-        notchMargin: 6,
         height: 75,
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
             _buildNavItem(Icons.home_filled, 'HOME', 0),
             _buildNavItem(Icons.receipt_long, 'HISTORY', 1),
-            const SizedBox(width: 56), // Space for larger FAB
+            GestureDetector(
+              onTap: () => _onTabChanged(2),
+              behavior: HitTestBehavior.opaque,
+              child: Transform.translate(
+                offset: const Offset(0, -8),
+                child: Container(
+                  width: 54,
+                  height: 54,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFfb8500),
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFFfb8500).withOpacity(0.3),
+                        blurRadius: 16,
+                        offset: const Offset(0, 6),
+                      ),
+                    ],
+                  ),
+                  child: const Icon(
+                    Icons.qr_code_scanner,
+                    color: Colors.white,
+                    size: 28,
+                  ),
+                ),
+              ),
+            ),
             _buildNavItem(Icons.restaurant_menu, 'MENU', 3),
             _buildNavItem(Icons.settings, 'SETTINGS', 4),
           ],
