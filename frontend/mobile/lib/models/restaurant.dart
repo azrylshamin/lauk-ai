@@ -3,6 +3,7 @@ class Restaurant {
   final String name;
   final String address;
   final String phone;
+  final String businessHours;
   final bool sstEnabled;
   final double sstRate;
   final bool scEnabled;
@@ -15,6 +16,7 @@ class Restaurant {
     required this.name,
     required this.address,
     required this.phone,
+    this.businessHours = '',
     this.sstEnabled = false,
     this.sstRate = 6.0,
     this.scEnabled = false,
@@ -29,6 +31,7 @@ class Restaurant {
       name: json['name'] ?? '',
       address: json['address'] ?? '',
       phone: json['phone'] ?? '',
+      businessHours: json['business_hours'] ?? '',
       sstEnabled: json['sst_enabled'] ?? false,
       sstRate: (json['sst_rate'] is String
               ? double.tryParse(json['sst_rate'])

@@ -57,6 +57,47 @@ class AuthService {
     }
   }
 
+  Future<Map<String, dynamic>> updateProfile(String name, String email) async {
+    final response = await _api.patch('/api/auth/profile', {
+      'name': name,
+      'email': email,
+    });
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      return {
+        'token': data['token'],
+        'user': User.fromJson(data['user']),
+      };
+    }
+    throw ApiException(response.statusCode, _extractError(response.body));
+  }
+
+  Future<void> changePassword(String currentPassword, String newPassword) async {
+    final response = await _api.post('/api/auth/change-password', {
+      'currentPassword': currentPassword,
+      'newPassword': newPassword,
+    });
+    if (response.statusCode == 200) return;
+    throw ApiException(response.statusCode, _extractError(response.body));
+  }
+
+  Future<User> uploadProfileImage(String filePath) async {
+    final response =
+        await _api.uploadEntityImage('/api/auth/profile/image', filePath);
+    if (response.statusCode == 200) {
+      return User.fromJson(jsonDecode(response.body));
+    }
+    throw ApiException(response.statusCode, _extractError(response.body));
+  }
+
+  Future<User> deleteProfileImage() async {
+    final response = await _api.delete('/api/auth/profile/image');
+    if (response.statusCode == 200) {
+      return User.fromJson(jsonDecode(response.body));
+    }
+    throw ApiException(response.statusCode, _extractError(response.body));
+  }
+
   String _extractError(String body) {
     try {
       final data = jsonDecode(body);

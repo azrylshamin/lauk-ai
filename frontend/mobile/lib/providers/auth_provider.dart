@@ -80,6 +80,15 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Update the in-memory user and optionally store a new JWT token.
+  Future<void> updateUser(User user, {String? token}) async {
+    _user = user;
+    if (token != null) {
+      await _api.setToken(token);
+    }
+    notifyListeners();
+  }
+
   void clearOnboardingFlag() {
     _needsOnboarding = false;
     notifyListeners();
