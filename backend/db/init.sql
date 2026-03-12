@@ -14,6 +14,7 @@ CREATE TABLE IF NOT EXISTS restaurants (
     image_url            TEXT,
     address              VARCHAR(255) DEFAULT '',
     phone                VARCHAR(20)  DEFAULT '',
+    business_hours       VARCHAR(100) DEFAULT '',
     sst_enabled          BOOLEAN      DEFAULT false,
     sst_rate             NUMERIC(5,2) DEFAULT 6.00,
     sc_enabled           BOOLEAN      DEFAULT false,
@@ -30,9 +31,10 @@ CREATE TABLE IF NOT EXISTS users (
     email         VARCHAR(255) UNIQUE NOT NULL,
     password_hash VARCHAR(255) NOT NULL,
     name          VARCHAR(100) NOT NULL,
-    role          VARCHAR(10)  NOT NULL DEFAULT 'staff'
-                      CHECK (role IN ('owner', 'staff')),
-    restaurant_id INTEGER NOT NULL REFERENCES restaurants(id),
+    role              VARCHAR(10)  NOT NULL DEFAULT 'staff'
+                          CHECK (role IN ('owner', 'staff')),
+    profile_image_url TEXT,
+    restaurant_id     INTEGER NOT NULL REFERENCES restaurants(id),
     created_at    TIMESTAMP DEFAULT NOW()
 );
 

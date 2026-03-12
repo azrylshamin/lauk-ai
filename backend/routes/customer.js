@@ -25,7 +25,7 @@ const upload = multer({
 router.get("/restaurants", async (_req, res) => {
     try {
         const { rows } = await pool.query(
-            "SELECT id, name, address, phone, image_url FROM restaurants ORDER BY name"
+            "SELECT id, name, address, phone, business_hours, image_url FROM restaurants ORDER BY name"
         );
         res.json(rows);
     } catch (err) {
