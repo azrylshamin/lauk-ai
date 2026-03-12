@@ -313,16 +313,37 @@ class _CustomerPageState extends State<CustomerPage> {
                                       color: const Color(0xFF12121D)),
                                 ),
                                 const SizedBox(height: 4),
-                                Text(
-                                  '${r.address.isNotEmpty ? r.address : "No address"} • ${r.phone}',
-                                  style: TextStyle(
-                                    color: Colors.blueGrey[400],
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w500,
+                                if (r.address.isNotEmpty)
+                                  Text(
+                                    r.address,
+                                    style: TextStyle(
+                                      color: Colors.blueGrey[400],
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
                                   ),
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
+                                if (r.businessHours.isNotEmpty)
+                                  Text(
+                                    r.businessHours,
+                                    style: TextStyle(
+                                      color: Colors.blueGrey[400],
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                if (r.address.isEmpty && r.businessHours.isEmpty)
+                                  Text(
+                                    'No details available',
+                                    style: TextStyle(
+                                      color: Colors.blueGrey[400],
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
                               ],
                             ),
                           ),

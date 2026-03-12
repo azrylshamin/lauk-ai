@@ -5,11 +5,16 @@ import 'package:provider/provider.dart';
 import '../../models/restaurant.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/restaurant_service.dart';
+import '../settings/business_hours_page.dart';
+import '../settings/change_password_page.dart';
+import '../settings/edit_profile_page.dart';
 import '../settings/employee_manager_page.dart';
 import '../settings/restaurant_profile_page.dart';
 
 class SettingsTab extends StatefulWidget {
-  const SettingsTab({super.key});
+  final VoidCallback? onNavigateToMenu;
+
+  const SettingsTab({super.key, this.onNavigateToMenu});
 
   @override
   State<SettingsTab> createState() => _SettingsTabState();
@@ -159,11 +164,16 @@ class _SettingsTabState extends State<SettingsTab> {
                       radius: 36,
                       backgroundColor: Colors.white,
                       foregroundColor: const Color(0xFFFB8500),
-                      child: Text(
-                        user.name.isNotEmpty ? user.name[0].toUpperCase() : 'U',
-                        style: const TextStyle(
-                            fontSize: 28, fontWeight: FontWeight.bold),
-                      ),
+                      backgroundImage: user.profileImageUrl != null
+                          ? NetworkImage(user.profileImageUrl!)
+                          : null,
+                      child: user.profileImageUrl == null
+                          ? Text(
+                              user.name.isNotEmpty ? user.name[0].toUpperCase() : 'U',
+                              style: const TextStyle(
+                                  fontSize: 28, fontWeight: FontWeight.bold),
+                            )
+                          : null,
                     ),
                   ),
                   const SizedBox(width: 16),
@@ -236,20 +246,26 @@ class _SettingsTabState extends State<SettingsTab> {
                         )
                       ],
                     ),
-                    if (_restaurant?.address != null && _restaurant!.address!.isNotEmpty)
+                    if (_restaurant != null && _restaurant!.address.isNotEmpty)
                       Padding(
                         padding: const EdgeInsets.only(top: 8),
                         child: Text(
-                          _restaurant!.address!,
+                          _restaurant!.address,
                           style: TextStyle(color: Colors.grey[600], fontSize: 14),
                         ),
                       ),
-                    if (_restaurant?.phone != null && _restaurant!.phone!.isNotEmpty)
+                    if (_restaurant != null && _restaurant!.businessHours.isNotEmpty)
                       Padding(
                         padding: const EdgeInsets.only(top: 4),
-                        child: Text(
-                          _restaurant!.phone!,
-                          style: TextStyle(color: Colors.grey[600], fontSize: 14),
+                        child: Row(
+                          children: [
+                            Icon(Icons.access_time, size: 14, color: Colors.grey[500]),
+                            const SizedBox(width: 4),
+                            Text(
+                              _restaurant!.businessHours,
+                              style: TextStyle(color: Colors.grey[600], fontSize: 14),
+                            ),
+                          ],
                         ),
                       ),
                     const SizedBox(height: 16),
@@ -290,8 +306,11 @@ class _SettingsTabState extends State<SettingsTab> {
                     icon: Icons.person_outline,
                     title: 'Edit Profile',
                     onTap: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Edit Profile not implemented yet.')),
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const EditProfilePage(),
+                        ),
                       );
                     },
                     showBorder: true,
@@ -300,8 +319,11 @@ class _SettingsTabState extends State<SettingsTab> {
                     icon: Icons.lock_outline,
                     title: 'Change Password',
                     onTap: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Change Password not implemented yet.')),
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const ChangePasswordPage(),
+                        ),
                       );
                     },
                     showBorder: false,
@@ -316,19 +338,21 @@ class _SettingsTabState extends State<SettingsTab> {
                     icon: Icons.restaurant_menu,
                     title: 'Menu Settings',
                     onTap: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Please use the Menu tab or specific item options.')),
-                      );
+                      widget.onNavigateToMenu?.call();
                     },
                     showBorder: true,
                   ),
                   _buildTile(
                     icon: Icons.access_time,
                     title: 'Business Hours',
-                    onTap: () {
-                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Business Hours not implemented yet.')),
+                    onTap: () async {
+                      await Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const BusinessHoursPage(),
+                        ),
                       );
+                      _loadRestaurant();
                     },
                     showBorder: true,
                   ),
