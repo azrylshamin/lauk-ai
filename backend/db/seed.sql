@@ -1,20 +1,18 @@
--- LaukAI — Menu Items Schema & Seed Data
--- Run: psql -U postgres -d laukai -f db/seed.sql
+-- LaukAI — Seed Data (demo / development)
+-- Run AFTER init.sql:  psql -U postgres -d laukai -f db/seed.sql
+--
+-- Creates a demo restaurant with default menu items
+-- matching the 6 YOLO detection classes.
 
-CREATE TABLE IF NOT EXISTS menu_items (
-    id          SERIAL PRIMARY KEY,
-    yolo_class  VARCHAR(50) UNIQUE NOT NULL,
-    name        VARCHAR(100) NOT NULL,
-    price       DECIMAL(10,2) NOT NULL DEFAULT 0.00,
-    created_at  TIMESTAMP DEFAULT NOW()
-);
+INSERT INTO restaurants (name, onboarding_completed)
+VALUES ('Demo Restaurant', true)
+ON CONFLICT DO NOTHING;
 
--- Seed the 6 known YOLO classes with default prices
-INSERT INTO menu_items (yolo_class, name, price) VALUES
-    ('Chicken',    'Ayam',    2.00),
-    ('Egg',        'Telur',   1.00),
-    ('Fish',       'Ikan',    2.50),
-    ('Rice',       'Nasi',    1.50),
-    ('Sauce',      'Kuah',    0.50),
-    ('Vegetables', 'Sayur',   1.00)
-ON CONFLICT (yolo_class) DO NOTHING;
+INSERT INTO menu_items (yolo_class, name, price, restaurant_id) VALUES
+    ('Chicken',    'Ayam',  2.00, 1),
+    ('Egg',        'Telur', 1.00, 1),
+    ('Fish',       'Ikan',  2.50, 1),
+    ('Rice',       'Nasi',  1.50, 1),
+    ('Sauce',      'Kuah',  0.50, 1),
+    ('Vegetables', 'Sayur', 1.00, 1)
+ON CONFLICT (restaurant_id, yolo_class) DO NOTHING;
