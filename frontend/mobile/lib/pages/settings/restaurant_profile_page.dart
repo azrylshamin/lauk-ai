@@ -16,7 +16,7 @@ class _RestaurantProfilePageState extends State<RestaurantProfilePage> {
   final _restaurantService = RestaurantService();
   final _nameController = TextEditingController();
   final _addressController = TextEditingController();
-  final _phoneController = TextEditingController();
+
   final _sstRateController = TextEditingController();
   final _scRateController = TextEditingController();
   bool _sstEnabled = false;
@@ -37,7 +37,7 @@ class _RestaurantProfilePageState extends State<RestaurantProfilePage> {
       final r = await _restaurantService.getProfile();
       _nameController.text = r.name;
       _addressController.text = r.address;
-      _phoneController.text = r.phone;
+
       _sstEnabled = r.sstEnabled;
       _scEnabled = r.scEnabled;
       _sstRateController.text = r.sstRate.toString();
@@ -139,7 +139,6 @@ class _RestaurantProfilePageState extends State<RestaurantProfilePage> {
       await _restaurantService.updateProfile({
         'name': _nameController.text.trim(),
         'address': _addressController.text.trim(),
-        'phone': _phoneController.text.trim(),
         'sst_enabled': _sstEnabled,
         'sst_rate': double.tryParse(_sstRateController.text) ?? 6.0,
         'sc_enabled': _scEnabled,
@@ -169,7 +168,6 @@ class _RestaurantProfilePageState extends State<RestaurantProfilePage> {
   void dispose() {
     _nameController.dispose();
     _addressController.dispose();
-    _phoneController.dispose();
     _sstRateController.dispose();
     _scRateController.dispose();
     super.dispose();
@@ -242,13 +240,6 @@ class _RestaurantProfilePageState extends State<RestaurantProfilePage> {
                     controller: _addressController,
                     decoration: const InputDecoration(labelText: 'Address'),
                     enabled: isOwner,
-                  ),
-                  const SizedBox(height: 16),
-                  TextField(
-                    controller: _phoneController,
-                    decoration: const InputDecoration(labelText: 'Phone'),
-                    enabled: isOwner,
-                    keyboardType: TextInputType.phone,
                   ),
                   const SizedBox(height: 32),
 

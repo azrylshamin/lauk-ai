@@ -50,7 +50,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
   final _authService = AuthService();
 
   final _addressController = TextEditingController();
-  final _phoneController = TextEditingController();
+
   final _sstRateController = TextEditingController(text: '6.0');
   final _scRateController = TextEditingController(text: '10.0');
 
@@ -157,7 +157,6 @@ class _OnboardingPageState extends State<OnboardingPage> {
       // Save restaurant profile
       await _restaurantService.updateProfile({
         'address': _addressController.text.trim(),
-        'phone': _phoneController.text.trim(),
         'sst_enabled': _sstEnabled,
         'sst_rate': double.tryParse(_sstRateController.text) ?? 6.0,
         'sc_enabled': _scEnabled,
@@ -221,7 +220,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
   void dispose() {
     _pageController.dispose();
     _addressController.dispose();
-    _phoneController.dispose();
+
     _sstRateController.dispose();
     _scRateController.dispose();
     for (final item in _menuItems) {
@@ -379,14 +378,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
             hintText: 'Enter your restaurant address',
             controller: _addressController,
           ),
-          const SizedBox(height: 20),
-          _buildTextField(
-            label: 'Phone Number',
-            hintText: 'Enter phone number',
-            controller: _phoneController,
-            keyboardType: TextInputType.phone,
-            textInputAction: TextInputAction.done,
-          ),
+
         ],
       ),
     );

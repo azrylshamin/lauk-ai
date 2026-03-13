@@ -2,7 +2,6 @@ class Restaurant {
   final int id;
   final String name;
   final String address;
-  final String phone;
   final String businessHours;
   final bool sstEnabled;
   final double sstRate;
@@ -15,7 +14,6 @@ class Restaurant {
     required this.id,
     required this.name,
     required this.address,
-    required this.phone,
     this.businessHours = '',
     this.sstEnabled = false,
     this.sstRate = 6.0,
@@ -30,7 +28,6 @@ class Restaurant {
       id: json['id'],
       name: json['name'] ?? '',
       address: json['address'] ?? '',
-      phone: json['phone'] ?? '',
       businessHours: json['business_hours'] ?? '',
       sstEnabled: json['sst_enabled'] ?? false,
       sstRate: (json['sst_rate'] is String
