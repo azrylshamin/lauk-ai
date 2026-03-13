@@ -80,7 +80,7 @@ class _DashboardPageState extends State<DashboardPage> {
             }
           }),
           MenuTab(onBack: () => _onTabChanged(0)),
-          SettingsTab(onNavigateToMenu: () => _onTabChanged(3)),
+          const SettingsTab(),
         ],
       ),
       bottomNavigationBar: BottomAppBar(

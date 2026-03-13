@@ -9,12 +9,11 @@ import '../settings/business_hours_page.dart';
 import '../settings/change_password_page.dart';
 import '../settings/edit_profile_page.dart';
 import '../settings/employee_manager_page.dart';
+import '../settings/menu_settings_page.dart';
 import '../settings/restaurant_profile_page.dart';
 
 class SettingsTab extends StatefulWidget {
-  final VoidCallback? onNavigateToMenu;
-
-  const SettingsTab({super.key, this.onNavigateToMenu});
+  const SettingsTab({super.key});
 
   @override
   State<SettingsTab> createState() => _SettingsTabState();
@@ -338,7 +337,12 @@ class _SettingsTabState extends State<SettingsTab> {
                     icon: Icons.restaurant_menu,
                     title: 'Menu Settings',
                     onTap: () {
-                      widget.onNavigateToMenu?.call();
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const MenuSettingsPage(),
+                        ),
+                      );
                     },
                     showBorder: true,
                   ),
