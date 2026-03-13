@@ -1,12 +1,17 @@
 # AI Service — Food Detection API
 
-FastAPI microservice that detects food items in mixed-rice dish images using YOLOv8.
+FastAPI microservice that detects food items in mixed-rice (_nasi campur_) dish images using YOLOv8.
 
-**Detectable classes:** Chicken, Egg, Fish, Rice, Sauce, Vegetables
+**Detectable classes:** Chicken · Egg · Fish · Rice · Sauce · Vegetables
 
 ## Quick Start
 
 ```bash
+# Create & activate a virtual environment (recommended)
+python -m venv .venv
+.venv\Scripts\activate        # Windows
+# source .venv/bin/activate   # macOS / Linux
+
 # Install dependencies
 pip install -r requirements.txt
 
@@ -103,26 +108,30 @@ curl -X POST "http://localhost:8000/predict?confidence=0.3" \
 ai-service/
 ├── app/
 │   ├── __init__.py
-│   └── main.py          # FastAPI application
+│   └── main.py              # FastAPI application
 ├── assets/
-│   └── Mix rice.v4i.yolov8/  # YOLOv8 dataset (gitignored)
-├── models/              # Trained weights (gitignored)
+│   └── Mix rice.v4i.yolov8/ # YOLOv8 dataset (gitignored)
+├── models/                  # Trained weights (gitignored)
 │   └── best.pt
-├── train.py             # Model training script
+├── train.py                 # Model training script
 ├── requirements.txt
 └── README.md
 ```
 
 ## Training
 
-The training script fine-tunes **YOLOv8n** (nano) on the dataset:
+The training script fine-tunes **YOLOv8n** (nano) on the mixed-rice dataset:
 
 ```bash
 python train.py
 ```
 
-- **Epochs:** 50 (with early stopping, patience=10)
-- **Image size:** 640×640
+- **Epochs:** 50 (with early stopping, patience 10)
+- **Image size:** 640 × 640
 - **Output:** `models/best.pt`
 
 To retrain with new data, add labeled images to the dataset folder and re-run the script.
+
+## Environment Variables
+
+None required for standalone use. The backend connects to this service via `AI_SERVICE_URL` (default `http://localhost:8000`).
