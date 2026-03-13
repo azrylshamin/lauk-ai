@@ -13,7 +13,6 @@ CREATE TABLE IF NOT EXISTS restaurants (
     name                 VARCHAR(100) NOT NULL,
     image_url            TEXT,
     address              VARCHAR(255) DEFAULT '',
-    phone                VARCHAR(20)  DEFAULT '',
     business_hours       VARCHAR(100) DEFAULT '',
     sst_enabled          BOOLEAN      DEFAULT false,
     sst_rate             NUMERIC(5,2) DEFAULT 6.00,

@@ -10,7 +10,7 @@ const uploadRestaurant = createUpload("restaurants");
 router.get("/", async (req, res) => {
     try {
         const { rows } = await pool.query(
-            "SELECT id, name, address, phone, business_hours, sst_enabled, sst_rate, sc_enabled, sc_rate, image_url, onboarding_completed, created_at FROM restaurants WHERE id = $1",
+            "SELECT id, name, address, business_hours, sst_enabled, sst_rate, sc_enabled, sc_rate, image_url, onboarding_completed, created_at FROM restaurants WHERE id = $1",
             [req.restaurantId]
         );
 
@@ -28,7 +28,7 @@ router.get("/", async (req, res) => {
 // PATCH / — update restaurant profile (owner only)
 router.patch("/", requireOwner, async (req, res) => {
     try {
-        const { name, address, phone, business_hours, sst_enabled, sst_rate, sc_enabled, sc_rate, onboarding_completed } = req.body;
+        const { name, address, business_hours, sst_enabled, sst_rate, sc_enabled, sc_rate, onboarding_completed } = req.body;
 
         const fields = [];
         const values = [];
@@ -41,10 +41,6 @@ router.patch("/", requireOwner, async (req, res) => {
         if (address !== undefined) {
             fields.push(`address = $${idx++}`);
             values.push(address.trim());
-        }
-        if (phone !== undefined) {
-            fields.push(`phone = $${idx++}`);
-            values.push(phone.trim());
         }
         if (business_hours !== undefined) {
             fields.push(`business_hours = $${idx++}`);
@@ -86,7 +82,7 @@ router.patch("/", requireOwner, async (req, res) => {
 
         values.push(req.restaurantId);
         const { rows } = await pool.query(
-            `UPDATE restaurants SET ${fields.join(", ")} WHERE id = $${idx} RETURNING id, name, address, phone, business_hours, sst_enabled, sst_rate, sc_enabled, sc_rate, image_url, onboarding_completed, created_at`,
+            `UPDATE restaurants SET ${fields.join(", ")} WHERE id = $${idx} RETURNING id, name, address, business_hours, sst_enabled, sst_rate, sc_enabled, sc_rate, image_url, onboarding_completed, created_at`,
             values
         );
 
@@ -119,7 +115,7 @@ router.post("/image", requireOwner, uploadRestaurant.single("image"), async (req
 
         const { rows } = await pool.query(
             `UPDATE restaurants SET image_url = $1 WHERE id = $2
-             RETURNING id, name, address, phone, business_hours, sst_enabled, sst_rate, sc_enabled, sc_rate, image_url, onboarding_completed, created_at`,
+             RETURNING id, name, address, business_hours, sst_enabled, sst_rate, sc_enabled, sc_rate, image_url, onboarding_completed, created_at`,
             [imageUrl, req.restaurantId]
         );
 
@@ -150,7 +146,7 @@ router.delete("/image", requireOwner, async (req, res) => {
 
         const { rows } = await pool.query(
             `UPDATE restaurants SET image_url = NULL WHERE id = $1
-             RETURNING id, name, address, phone, business_hours, sst_enabled, sst_rate, sc_enabled, sc_rate, image_url, onboarding_completed, created_at`,
+             RETURNING id, name, address, business_hours, sst_enabled, sst_rate, sc_enabled, sc_rate, image_url, onboarding_completed, created_at`,
             [req.restaurantId]
         );
 
