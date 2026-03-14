@@ -40,11 +40,11 @@ class _TransactionDetailsPageState extends State<TransactionDetailsPage> {
               setModalState(() => _voiding = true);
               try {
                 await _billService.deleteBill(widget.billId);
-                if (mounted) {
+                if (ctx.mounted) {
                   Navigator.pop(ctx, true); // Close modal returning true
                 }
               } catch (e) {
-                if (mounted) {
+                if (ctx.mounted) {
                   setModalState(() => _voiding = false);
                   Navigator.pop(ctx, false); // Close modal returning false
                 }
@@ -178,7 +178,7 @@ class _TransactionDetailsPageState extends State<TransactionDetailsPage> {
                               ),
                               const SizedBox(height: 4),
                               Text(
-                                '${DateFormat('MMMM d, h:mm a').format(_bill!.createdAt)}',
+                                DateFormat('MMMM d, h:mm a').format(_bill!.createdAt),
                                 style: GoogleFonts.inter(
                                   fontSize: 15,
                                   color: const Color(0xFF6E7191),
@@ -194,7 +194,7 @@ class _TransactionDetailsPageState extends State<TransactionDetailsPage> {
                                   borderRadius: BorderRadius.circular(24),
                                   boxShadow: [
                                     BoxShadow(
-                                      color: Colors.black.withOpacity(0.02),
+                                      color: Colors.black.withValues(alpha: 0.02),
                                       blurRadius: 10,
                                       offset: const Offset(0, 4),
                                     ),

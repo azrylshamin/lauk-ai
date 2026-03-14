@@ -234,7 +234,7 @@ class _CustomerPageState extends State<CustomerPage> {
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(24),
                 borderSide: BorderSide(
-                    color: const Color(0xFFfb8500).withOpacity(0.3)),
+                    color: const Color(0xFFfb8500).withValues(alpha: 0.3)),
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(24),
@@ -382,7 +382,7 @@ class _CustomerPageState extends State<CustomerPage> {
                       border: Border.all(color: Colors.grey[200]!),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.02),
+                          color: Colors.black.withValues(alpha: 0.02),
                           blurRadius: 10,
                           offset: const Offset(0, 4),
                         )
@@ -610,7 +610,7 @@ class _CustomerPageState extends State<CustomerPage> {
               Image.file(_images[_activeImageIndex], fit: BoxFit.cover),
               if (_loading)
                 Container(
-                  color: Colors.black.withOpacity(0.4),
+                  color: Colors.black.withValues(alpha: 0.4),
                   child: const Center(
                     child: CircularProgressIndicator(color: Color(0xFFfb8500)),
                   ),
@@ -623,7 +623,7 @@ class _CustomerPageState extends State<CustomerPage> {
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                     decoration: BoxDecoration(
-                      color: Colors.black.withOpacity(0.6),
+                      color: Colors.black.withValues(alpha: 0.6),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
@@ -641,7 +641,7 @@ class _CustomerPageState extends State<CustomerPage> {
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.9),
+                      color: Colors.white.withValues(alpha: 0.9),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Row(
@@ -669,7 +669,7 @@ class _CustomerPageState extends State<CustomerPage> {
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
               itemCount: _images.length,
-              separatorBuilder: (_, __) => const SizedBox(width: 8),
+              separatorBuilder: (_, _) => const SizedBox(width: 8),
               itemBuilder: (context, index) {
                 final isActive = index == _activeImageIndex;
                 return GestureDetector(
@@ -708,7 +708,7 @@ class _CustomerPageState extends State<CustomerPage> {
                 borderRadius: BorderRadius.circular(24),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
+                    color: Colors.black.withValues(alpha:0.1),
                     blurRadius: 15,
                     offset: const Offset(0, 5),
                   ),
@@ -723,7 +723,7 @@ class _CustomerPageState extends State<CustomerPage> {
               Positioned.fill(
                 child: Container(
                   decoration: BoxDecoration(
-                    color: Colors.black.withOpacity(0.4),
+                    color: Colors.black.withValues(alpha:0.4),
                     borderRadius: BorderRadius.circular(24),
                   ),
                   child: const Center(
@@ -758,7 +758,7 @@ class _CustomerPageState extends State<CustomerPage> {
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                   decoration: BoxDecoration(
-                    color: Colors.black.withOpacity(0.6),
+                    color: Colors.black.withValues(alpha:0.6),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
@@ -776,7 +776,7 @@ class _CustomerPageState extends State<CustomerPage> {
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.9),
+                    color: Colors.white.withValues(alpha: 0.9),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Row(
@@ -803,7 +803,7 @@ class _CustomerPageState extends State<CustomerPage> {
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
               itemCount: _images.length,
-              separatorBuilder: (_, __) => const SizedBox(width: 8),
+              separatorBuilder: (_, _) => const SizedBox(width: 8),
               itemBuilder: (context, index) {
                 final isActive = index == _activeImageIndex;
                 return GestureDetector(
@@ -902,7 +902,7 @@ class _CustomerPageState extends State<CustomerPage> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFFfb8500),
                   foregroundColor: Colors.white,
-                  disabledBackgroundColor: const Color(0xFFfb8500).withOpacity(0.5),
+                  disabledBackgroundColor: const Color(0xFFfb8500).withValues(alpha:0.5),
                   padding: const EdgeInsets.symmetric(vertical: 18),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(24),

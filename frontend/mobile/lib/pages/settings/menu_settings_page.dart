@@ -109,7 +109,7 @@ class _MenuSettingsPageState extends State<MenuSettingsPage> {
                     ),
                     const SizedBox(height: 16),
                     DropdownButtonFormField<String>(
-                      value: availableClasses.contains(yoloController.text)
+                      initialValue: availableClasses.contains(yoloController.text)
                           ? yoloController.text
                           : availableClasses.first,
                       isExpanded: true,
@@ -311,7 +311,7 @@ class _MenuSettingsPageState extends State<MenuSettingsPage> {
                                   }
                                   _load();
                                 } catch (e) {
-                                  if (mounted) {
+                                  if (context.mounted) {
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       SnackBar(content: Text('Error: $e')),
                                     );
@@ -468,7 +468,7 @@ class _MenuSettingsPageState extends State<MenuSettingsPage> {
                           borderRadius: BorderRadius.circular(16),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.03),
+                              color: Colors.black.withValues(alpha: 0.03),
                               blurRadius: 10,
                               offset: const Offset(0, 4),
                             ),

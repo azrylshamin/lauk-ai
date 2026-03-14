@@ -327,7 +327,7 @@ class _ScanTabState extends State<ScanTab> {
               Image.file(_images[_activeImageIndex], fit: BoxFit.cover),
               if (_detecting)
                 Container(
-                  color: Colors.black.withOpacity(0.4),
+                  color: Colors.black.withValues(alpha: 0.4),
                   child: const Center(
                     child: CircularProgressIndicator(color: Color(0xFFfb8500)),
                   ),
@@ -339,7 +339,7 @@ class _ScanTabState extends State<ScanTab> {
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                   decoration: BoxDecoration(
-                    color: Colors.black.withOpacity(0.6),
+                    color: Colors.black.withValues(alpha: 0.6),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
@@ -361,7 +361,7 @@ class _ScanTabState extends State<ScanTab> {
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.9),
+                      color: Colors.white.withValues(alpha: 0.9),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Row(
@@ -393,7 +393,7 @@ class _ScanTabState extends State<ScanTab> {
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
               itemCount: _images.length,
-              separatorBuilder: (_, __) => const SizedBox(width: 8),
+              separatorBuilder: (_, _) => const SizedBox(width: 8),
               itemBuilder: (context, index) {
                 final isActive = index == _activeImageIndex;
                 return GestureDetector(
@@ -427,7 +427,7 @@ class _ScanTabState extends State<ScanTab> {
         border: Border.all(color: const Color(0xFFF4F4F6), width: 1.5),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.02),
+            color: Colors.black.withValues(alpha: 0.02),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -702,7 +702,7 @@ class _ScanTabState extends State<ScanTab> {
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 20,
             offset: const Offset(0, -10),
           ),
@@ -739,7 +739,7 @@ class _ScanTabState extends State<ScanTab> {
                 : null,
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFFfb8500),
-              disabledBackgroundColor: const Color(0xFFfb8500).withOpacity(0.5),
+              disabledBackgroundColor: const Color(0xFFfb8500).withValues(alpha: 0.5),
               foregroundColor: Colors.white,
               elevation: 0,
               padding: const EdgeInsets.symmetric(vertical: 18),

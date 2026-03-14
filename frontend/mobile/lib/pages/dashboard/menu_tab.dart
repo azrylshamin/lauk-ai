@@ -103,7 +103,7 @@ class _MenuTabState extends State<MenuTab> {
                                 borderRadius: BorderRadius.circular(16),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.black.withOpacity(0.03),
+                                    color: Colors.black.withValues(alpha: 0.03),
                                     blurRadius: 10,
                                     offset: const Offset(0, 4),
                                   ),
@@ -182,7 +182,7 @@ class _MenuTabState extends State<MenuTab> {
                                     onChanged: (value) {
                                       _menuService.updateMenuItem(item.id, {'active': value}).then((_) => _load());
                                     },
-                                    activeColor: const Color(0xFFfb8500),
+                                    activeThumbColor: const Color(0xFFfb8500),
                                     inactiveThumbColor: Colors.grey[400],
                                     inactiveTrackColor: Colors.grey[200],
                                   ),

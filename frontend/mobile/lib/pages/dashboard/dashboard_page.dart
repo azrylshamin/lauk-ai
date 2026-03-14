@@ -86,7 +86,7 @@ class _DashboardPageState extends State<DashboardPage> {
       bottomNavigationBar: BottomAppBar(
         color: Colors.white,
         elevation: 10,
-        shadowColor: Colors.black.withOpacity(0.1),
+        shadowColor: Colors.black.withValues(alpha: 0.1),
         height: 75,
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -106,7 +106,7 @@ class _DashboardPageState extends State<DashboardPage> {
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
-                        color: const Color(0xFFfb8500).withOpacity(0.3),
+                        color: const Color(0xFFfb8500).withValues(alpha: 0.3),
                         blurRadius: 16,
                         offset: const Offset(0, 6),
                       ),

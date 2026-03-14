@@ -152,7 +152,7 @@ class _ConfirmOrderPageState extends State<ConfirmOrderPage> {
                         borderRadius: BorderRadius.circular(20),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.02),
+                            color: Colors.black.withValues(alpha: 0.02),
                             blurRadius: 10,
                             offset: const Offset(0, 4),
                           ),
@@ -328,7 +328,7 @@ class _ConfirmOrderPageState extends State<ConfirmOrderPage> {
                     Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFFBE4D2).withOpacity(0.5),
+                        color: const Color(0xFFFBE4D2).withValues(alpha: 0.5),
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(color: const Color(0xFFFBE4D2)),
                       ),
@@ -382,7 +382,7 @@ class _ConfirmOrderPageState extends State<ConfirmOrderPage> {
         color: const Color(0xFFF7F7F9),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 20,
             offset: const Offset(0, -10),
           ),
@@ -392,7 +392,7 @@ class _ConfirmOrderPageState extends State<ConfirmOrderPage> {
         onPressed: _confirming ? null : _completeOrder,
         style: ElevatedButton.styleFrom(
           backgroundColor: const Color(0xFFfb8500),
-          disabledBackgroundColor: const Color(0xFFfb8500).withOpacity(0.5),
+          disabledBackgroundColor: const Color(0xFFfb8500).withValues(alpha: 0.5),
           foregroundColor: Colors.white,
           elevation: 0,
           padding: const EdgeInsets.symmetric(vertical: 18),
