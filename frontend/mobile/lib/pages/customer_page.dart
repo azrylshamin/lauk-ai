@@ -324,9 +324,9 @@ class _CustomerPageState extends State<CustomerPage> {
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                   ),
-                                if (r.businessHours.isNotEmpty)
+                                if (r.businessHoursSummary.isNotEmpty)
                                   Text(
-                                    r.businessHours,
+                                    r.businessHoursSummary,
                                     style: TextStyle(
                                       color: Colors.blueGrey[400],
                                       fontSize: 12,
@@ -335,7 +335,7 @@ class _CustomerPageState extends State<CustomerPage> {
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                   ),
-                                if (r.address.isEmpty && r.businessHours.isEmpty)
+                                if (r.address.isEmpty && r.businessHoursSummary.isEmpty)
                                   Text(
                                     'No details available',
                                     style: TextStyle(

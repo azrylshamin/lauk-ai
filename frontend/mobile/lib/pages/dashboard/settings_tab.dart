@@ -253,7 +253,7 @@ class _SettingsTabState extends State<SettingsTab> {
                           style: TextStyle(color: Colors.grey[600], fontSize: 14),
                         ),
                       ),
-                    if (_restaurant != null && _restaurant!.businessHours.isNotEmpty)
+                    if (_restaurant != null && _restaurant!.businessHoursSummary.isNotEmpty)
                       Padding(
                         padding: const EdgeInsets.only(top: 4),
                         child: Row(
@@ -261,7 +261,7 @@ class _SettingsTabState extends State<SettingsTab> {
                             Icon(Icons.access_time, size: 14, color: Colors.grey[500]),
                             const SizedBox(width: 4),
                             Text(
-                              _restaurant!.businessHours,
+                              _restaurant!.businessHoursSummary,
                               style: TextStyle(color: Colors.grey[600], fontSize: 14),
                             ),
                           ],
