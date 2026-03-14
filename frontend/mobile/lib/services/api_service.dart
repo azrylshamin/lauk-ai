@@ -64,6 +64,16 @@ class ApiService {
     return response;
   }
 
+  Future<http.Response> put(String path, Map<String, dynamic> body) async {
+    final response = await http.put(
+      Uri.parse('$apiUrl$path'),
+      headers: _authHeaders,
+      body: jsonEncode(body),
+    );
+    _handleUnauthorized(response);
+    return response;
+  }
+
   Future<http.Response> delete(String path) async {
     final response = await http.delete(
       Uri.parse('$apiUrl$path'),

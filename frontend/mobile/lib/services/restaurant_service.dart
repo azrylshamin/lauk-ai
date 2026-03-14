@@ -21,6 +21,17 @@ class RestaurantService {
     throw Exception('Failed to update restaurant profile');
   }
 
+  Future<List<StoreHour>> updateStoreHours(List<StoreHour> hours) async {
+    final response = await _api.put('/api/restaurant/hours', {
+      'hours': hours.map((h) => h.toJson()).toList(),
+    });
+    if (response.statusCode == 200) {
+      final list = jsonDecode(response.body) as List;
+      return list.map((h) => StoreHour.fromJson(h)).toList();
+    }
+    throw Exception('Failed to update store hours');
+  }
+
   Future<Restaurant> uploadImage(String filePath) async {
     final response =
         await _api.uploadEntityImage('/api/restaurant/image', filePath);
