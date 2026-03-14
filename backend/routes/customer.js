@@ -21,13 +21,36 @@ const upload = multer({
     },
 });
 
-// GET /restaurants — list all restaurants (public)
+// GET /restaurants — list all restaurants (public, includes store hours)
 router.get("/restaurants", async (_req, res) => {
     try {
-        const { rows } = await pool.query(
-            "SELECT id, name, address, business_hours, image_url FROM restaurants ORDER BY name"
+        const { rows: restaurants } = await pool.query(
+            "SELECT id, name, address, image_url FROM restaurants ORDER BY name"
         );
-        res.json(rows);
+
+        // Fetch all store hours in one query and group by restaurant
+        const { rows: allHours } = await pool.query(
+            "SELECT restaurant_id, day_of_week, open_time, close_time FROM store_hours ORDER BY day_of_week"
+        );
+
+        const hoursByRestaurant = {};
+        for (const h of allHours) {
+            if (!hoursByRestaurant[h.restaurant_id]) {
+                hoursByRestaurant[h.restaurant_id] = [];
+            }
+            hoursByRestaurant[h.restaurant_id].push({
+                day_of_week: h.day_of_week,
+                open_time: h.open_time,
+                close_time: h.close_time,
+            });
+        }
+
+        const result = restaurants.map((r) => ({
+            ...r,
+            store_hours: hoursByRestaurant[r.id] || [],
+        }));
+
+        res.json(result);
     } catch (err) {
         console.error("Customer restaurant list error:", err);
         res.status(500).json({ error: err.message });

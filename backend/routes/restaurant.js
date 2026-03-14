@@ -6,11 +6,11 @@ const { createUpload, destroyImage } = require("../middleware/upload");
 const router = Router();
 const uploadRestaurant = createUpload("restaurants");
 
-// GET / — fetch the authenticated restaurant's profile
+// GET / — fetch the authenticated restaurant's profile (includes store_hours)
 router.get("/", async (req, res) => {
     try {
         const { rows } = await pool.query(
-            "SELECT id, name, address, business_hours, sst_enabled, sst_rate, sc_enabled, sc_rate, image_url, onboarding_completed, created_at FROM restaurants WHERE id = $1",
+            "SELECT id, name, address, sst_enabled, sst_rate, sc_enabled, sc_rate, image_url, onboarding_completed, created_at FROM restaurants WHERE id = $1",
             [req.restaurantId]
         );
 
@@ -18,7 +18,12 @@ router.get("/", async (req, res) => {
             return res.status(404).json({ error: "Restaurant not found" });
         }
 
-        res.json(rows[0]);
+        const { rows: hours } = await pool.query(
+            "SELECT id, day_of_week, open_time, close_time FROM store_hours WHERE restaurant_id = $1 ORDER BY day_of_week",
+            [req.restaurantId]
+        );
+
+        res.json({ ...rows[0], store_hours: hours });
     } catch (err) {
         console.error("Restaurant fetch error:", err);
         res.status(500).json({ error: err.message });
@@ -28,7 +33,7 @@ router.get("/", async (req, res) => {
 // PATCH / — update restaurant profile (owner only)
 router.patch("/", requireOwner, async (req, res) => {
     try {
-        const { name, address, business_hours, sst_enabled, sst_rate, sc_enabled, sc_rate, onboarding_completed } = req.body;
+        const { name, address, sst_enabled, sst_rate, sc_enabled, sc_rate, onboarding_completed } = req.body;
 
         const fields = [];
         const values = [];
@@ -41,10 +46,6 @@ router.patch("/", requireOwner, async (req, res) => {
         if (address !== undefined) {
             fields.push(`address = $${idx++}`);
             values.push(address.trim());
-        }
-        if (business_hours !== undefined) {
-            fields.push(`business_hours = $${idx++}`);
-            values.push(business_hours.trim());
         }
         if (sst_enabled !== undefined) {
             fields.push(`sst_enabled = $${idx++}`);
@@ -82,7 +83,7 @@ router.patch("/", requireOwner, async (req, res) => {
 
         values.push(req.restaurantId);
         const { rows } = await pool.query(
-            `UPDATE restaurants SET ${fields.join(", ")} WHERE id = $${idx} RETURNING id, name, address, business_hours, sst_enabled, sst_rate, sc_enabled, sc_rate, image_url, onboarding_completed, created_at`,
+            `UPDATE restaurants SET ${fields.join(", ")} WHERE id = $${idx} RETURNING id, name, address, sst_enabled, sst_rate, sc_enabled, sc_rate, image_url, onboarding_completed, created_at`,
             values
         );
 
@@ -90,9 +91,64 @@ router.patch("/", requireOwner, async (req, res) => {
             return res.status(404).json({ error: "Restaurant not found" });
         }
 
-        res.json(rows[0]);
+        const { rows: hours } = await pool.query(
+            "SELECT id, day_of_week, open_time, close_time FROM store_hours WHERE restaurant_id = $1 ORDER BY day_of_week",
+            [req.restaurantId]
+        );
+
+        res.json({ ...rows[0], store_hours: hours });
     } catch (err) {
         console.error("Restaurant update error:", err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// PUT /hours — replace all store hours for the restaurant (owner only)
+router.put("/hours", requireOwner, async (req, res) => {
+    try {
+        const { hours } = req.body;
+        if (!Array.isArray(hours)) {
+            return res.status(400).json({ error: "hours must be an array" });
+        }
+
+        const client = await pool.connect();
+        try {
+            await client.query("BEGIN");
+
+            // Delete existing hours
+            await client.query(
+                "DELETE FROM store_hours WHERE restaurant_id = $1",
+                [req.restaurantId]
+            );
+
+            // Insert new hours
+            for (const h of hours) {
+                const day = parseInt(h.day_of_week, 10);
+                if (isNaN(day) || day < 0 || day > 6) continue;
+                if (!h.open_time || !h.close_time) continue;
+
+                await client.query(
+                    "INSERT INTO store_hours (restaurant_id, day_of_week, open_time, close_time) VALUES ($1, $2, $3, $4)",
+                    [req.restaurantId, day, h.open_time, h.close_time]
+                );
+            }
+
+            await client.query("COMMIT");
+        } catch (txErr) {
+            await client.query("ROLLBACK");
+            throw txErr;
+        } finally {
+            client.release();
+        }
+
+        const { rows } = await pool.query(
+            "SELECT id, day_of_week, open_time, close_time FROM store_hours WHERE restaurant_id = $1 ORDER BY day_of_week",
+            [req.restaurantId]
+        );
+
+        res.json(rows);
+    } catch (err) {
+        console.error("Store hours update error:", err);
         res.status(500).json({ error: err.message });
     }
 });
@@ -115,7 +171,7 @@ router.post("/image", requireOwner, uploadRestaurant.single("image"), async (req
 
         const { rows } = await pool.query(
             `UPDATE restaurants SET image_url = $1 WHERE id = $2
-             RETURNING id, name, address, business_hours, sst_enabled, sst_rate, sc_enabled, sc_rate, image_url, onboarding_completed, created_at`,
+             RETURNING id, name, address, sst_enabled, sst_rate, sc_enabled, sc_rate, image_url, onboarding_completed, created_at`,
             [imageUrl, req.restaurantId]
         );
 
@@ -146,7 +202,7 @@ router.delete("/image", requireOwner, async (req, res) => {
 
         const { rows } = await pool.query(
             `UPDATE restaurants SET image_url = NULL WHERE id = $1
-             RETURNING id, name, address, business_hours, sst_enabled, sst_rate, sc_enabled, sc_rate, image_url, onboarding_completed, created_at`,
+             RETURNING id, name, address, sst_enabled, sst_rate, sc_enabled, sc_rate, image_url, onboarding_completed, created_at`,
             [req.restaurantId]
         );
 
