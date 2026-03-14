@@ -13,7 +13,6 @@ CREATE TABLE IF NOT EXISTS restaurants (
     name                 VARCHAR(100) NOT NULL,
     image_url            TEXT,
     address              VARCHAR(255) DEFAULT '',
-    business_hours       VARCHAR(100) DEFAULT '',
     sst_enabled          BOOLEAN      DEFAULT false,
     sst_rate             NUMERIC(5,2) DEFAULT 6.00,
     sc_enabled           BOOLEAN      DEFAULT false,
@@ -21,6 +20,20 @@ CREATE TABLE IF NOT EXISTS restaurants (
     onboarding_completed BOOLEAN      DEFAULT false,
     created_at           TIMESTAMP    DEFAULT NOW()
 );
+
+-- ============================================================
+-- 1b. Store Hours (per-day operating hours for each restaurant)
+-- ============================================================
+CREATE TABLE IF NOT EXISTS store_hours (
+    id            SERIAL PRIMARY KEY,
+    restaurant_id INTEGER NOT NULL REFERENCES restaurants(id) ON DELETE CASCADE,
+    day_of_week   SMALLINT NOT NULL CHECK (day_of_week BETWEEN 0 AND 6),
+    open_time     TIME NOT NULL,
+    close_time    TIME NOT NULL,
+    CONSTRAINT store_hours_unique_day UNIQUE (restaurant_id, day_of_week)
+);
+
+CREATE INDEX IF NOT EXISTS idx_store_hours_restaurant ON store_hours(restaurant_id);
 
 -- ============================================================
 -- 2. Users (multi-tenant, scoped to a restaurant)

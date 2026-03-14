@@ -11,11 +11,10 @@
 -- ============================================================
 -- 1. Restaurant
 -- ============================================================
-INSERT INTO restaurants (name, address, business_hours, sst_enabled, sst_rate, sc_enabled, sc_rate, onboarding_completed)
+INSERT INTO restaurants (name, address, sst_enabled, sst_rate, sc_enabled, sc_rate, onboarding_completed)
 VALUES (
     'Warung Test',
     'Lot 12, Jalan Merdeka, Taman Sri Rampai, 53300 Kuala Lumpur',
-    '7:00 AM – 9:00 PM',
     true,
     6.00,
     false,
@@ -23,6 +22,16 @@ VALUES (
     true
 )
 ON CONFLICT DO NOTHING;
+
+-- Store hours: Mon-Sat 7 AM – 9 PM, Sun closed
+INSERT INTO store_hours (restaurant_id, day_of_week, open_time, close_time) VALUES
+    (1, 1, '07:00', '21:00'),  -- Monday
+    (1, 2, '07:00', '21:00'),  -- Tuesday
+    (1, 3, '07:00', '21:00'),  -- Wednesday
+    (1, 4, '07:00', '21:00'),  -- Thursday
+    (1, 5, '07:00', '21:00'),  -- Friday
+    (1, 6, '07:00', '21:00')   -- Saturday
+ON CONFLICT (restaurant_id, day_of_week) DO NOTHING;
 
 -- ============================================================
 -- 2. Users  (passwords hashed with bcrypt — plaintext: Pa$$w0rd)
