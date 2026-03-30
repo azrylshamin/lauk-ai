@@ -14,16 +14,11 @@ class BusinessHoursPage extends StatefulWidget {
 
 class _DayEntry {
   final int dayOfWeek;
-  bool enabled;
-  TimeOfDay openTime;
-  TimeOfDay closeTime;
+  bool enabled = false;
+  TimeOfDay openTime = const TimeOfDay(hour: 8, minute: 0);
+  TimeOfDay closeTime = const TimeOfDay(hour: 21, minute: 0);
 
-  _DayEntry({
-    required this.dayOfWeek,
-    this.enabled = false,
-    this.openTime = const TimeOfDay(hour: 8, minute: 0),
-    this.closeTime = const TimeOfDay(hour: 21, minute: 0),
-  });
+  _DayEntry({required this.dayOfWeek});
 
   String get dayName => StoreHour.dayNames[dayOfWeek];
 }
